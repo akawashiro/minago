@@ -48,7 +48,7 @@ while True:
     right_pupil = gaze.pupil_right_coords()
 
     try:
-        x = (left_pupil[0]+right_pupil[0])/640-1
+        x = 1-(left_pupil[0]+right_pupil[0])/640
         y = (left_pupil[1]+right_pupil[1])/480-1
     except:
         pass
