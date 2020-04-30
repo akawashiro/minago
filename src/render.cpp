@@ -67,11 +67,12 @@ int main(void) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                             (socklen_t *)&addrlen)) < 0) {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
+    // comment out temporally
+    // if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
+    //                          (socklen_t *)&addrlen)) < 0) {
+    //     perror("accept");
+    //     exit(EXIT_FAILURE);
+    // }
 
     fd.fd = new_socket;
     fd.events = POLLIN | POLLERR;
@@ -120,7 +121,7 @@ int main(void) {
 
     // Set the mouse at the center of the screen
     glfwPollEvents();
-    glfwSetCursorPos(window, 1024 / 2, 768 / 2);
+    // glfwSetCursorPos(window, 1024 / 2, 768 / 2);
 
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -138,17 +139,21 @@ int main(void) {
     glBindVertexArray(VertexArrayID);
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders("TransformVertexShader.vertexshader",
-                                   "TextureFragmentShader.fragmentshader");
+    // GLuint programID = LoadShaders("TransformVertexShader.vertexshader",
+    //    "TextureFragmentShader.fragmentshader");
+    GLuint programID = LoadShaders("StandardShading.vertexshader",
+                                   "StandardShading.fragmentshader");
 
     // Get a handle for our "MVP" uniform
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+    GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
+    GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
 
     // Load the texture
     // GLuint Texture = loadDDS("uvmap.DDS");
 
     // Get a handle for our "myTextureSampler" uniform
-    // GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
+    GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
 
     // Read our .obj file
     std::vector<glm::vec3> vertices;
@@ -170,22 +175,33 @@ int main(void) {
     glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0],
                  GL_STATIC_DRAW);
 
+    GLuint normalbuffer;
+    glGenBuffers(1, &normalbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3),
+                 &normals[0], GL_STATIC_DRAW);
+
+    // Get a handle for our "LightPosition" uniform
+    glUseProgram(programID);
+    GLuint LightID =
+        glGetUniformLocation(programID, "LightPosition_worldspace");
+
     double time = 0;
-    double delta_time = 0.1;
+    double delta_time = 0.05;
     double radius = 2.0;
-    double x, y;
+    double x = 0, y = 0;
 
     do {
         // poll the socket start
-        poll(&fd, 1, 10);
-        if (fd.revents & POLLIN) {
-            valread = read(new_socket, buffer, 1024);
-            std::istringstream is(buffer);
-            // send(new_socket, hello, strlen(hello), 0);
-            is >> x >> y;
-            std::cout << "x = " << x << ", "
-                      << "y = " << y << std::endl;
-        }
+        // poll(&fd, 1, 10);
+        // if (fd.revents & POLLIN) {
+        //     valread = read(new_socket, buffer, 1024);
+        //     std::istringstream is(buffer);
+        //     // send(new_socket, hello, strlen(hello), 0);
+        //     is >> x >> y;
+        //     std::cout << "x = " << x << ", "
+        //               << "y = " << y << std::endl;
+        // }
         // poll the socket end
 
         // Clear the screen
@@ -207,13 +223,12 @@ int main(void) {
         // 	glm::vec3(0, 0, 0),
         // 	glm::vec3(0, 1, 0));
 
-        // glm::mat4 ViewMatrix =
-        //     glm::lookAt(glm::vec3(radius * sin(time), 2.0, radius *
-        //     cos(time)),
-        //                 glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        glm::mat4 ViewMatrix =
+            glm::lookAt(glm::vec3(radius * sin(time), 1.5, radius * cos(time)),
+                        glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
-        glm::mat4 ViewMatrix = glm::lookAt(
-            glm::vec3(x, y, 2.0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        // glm::mat4 ViewMatrix = glm::lookAt(
+        //     glm::vec3(x, y, 2.0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         time += delta_time;
 
         glm::mat4 ModelMatrix = glm::mat4(1.0);
@@ -223,12 +238,17 @@ int main(void) {
         // Send our transformation to the currently bound shader,
         // in the "MVP" uniform
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+        glm::vec3 lightPos = glm::vec3(4, 4, 4);
+        glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
         // Bind our texture in Texture Unit 0
         // glActiveTexture(GL_TEXTURE0);
         // glBindTexture(GL_TEXTURE_2D, Texture);
         // Set our "myTextureSampler" sampler to use Texture Unit 0
-        // glUniform1i(TextureID, 0);
+        glUniform1i(TextureID, 0);
 
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
@@ -252,11 +272,23 @@ int main(void) {
                               (void *)0 // array buffer offset
         );
 
+        // 3rd attribute buffer : normals
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+        glVertexAttribPointer(2,        // attribute
+                              3,        // size
+                              GL_FLOAT, // type
+                              GL_FALSE, // normalized?
+                              0,        // stride
+                              (void *)0 // array buffer offset
+        );
+
         // Draw the triangle !
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -269,6 +301,7 @@ int main(void) {
     // Cleanup VBO and shader
     glDeleteBuffers(1, &vertexbuffer);
     glDeleteBuffers(1, &uvbuffer);
+    glDeleteBuffers(1, &normalbuffer);
     glDeleteProgram(programID);
     // glDeleteTextures(1, &Texture);
     glDeleteVertexArrays(1, &VertexArrayID);
