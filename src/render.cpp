@@ -67,7 +67,6 @@ int main(void) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    // comment out temporally
     // if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
     //                          (socklen_t *)&addrlen)) < 0) {
     //     perror("accept");
@@ -193,15 +192,15 @@ int main(void) {
 
     do {
         // poll the socket start
-        // poll(&fd, 1, 10);
-        // if (fd.revents & POLLIN) {
-        //     valread = read(new_socket, buffer, 1024);
-        //     std::istringstream is(buffer);
-        //     // send(new_socket, hello, strlen(hello), 0);
-        //     is >> x >> y;
-        //     std::cout << "x = " << x << ", "
-        //               << "y = " << y << std::endl;
-        // }
+        poll(&fd, 1, 10);
+        if (fd.revents & POLLIN) {
+            valread = read(new_socket, buffer, 1024);
+            std::istringstream is(buffer);
+            // send(new_socket, hello, strlen(hello), 0);
+            is >> x >> y;
+            std::cout << "x = " << x << ", "
+                      << "y = " << y << std::endl;
+        }
         // poll the socket end
 
         // Clear the screen
@@ -223,12 +222,13 @@ int main(void) {
         // 	glm::vec3(0, 0, 0),
         // 	glm::vec3(0, 1, 0));
 
-        glm::mat4 ViewMatrix =
-            glm::lookAt(glm::vec3(radius * sin(time), 1.5, radius * cos(time)),
-                        glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        // glm::mat4 ViewMatrix =
+        //     glm::lookAt(glm::vec3(radius * sin(time), 1.5, radius *
+        //     cos(time)),
+        //                 glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
-        // glm::mat4 ViewMatrix = glm::lookAt(
-        //     glm::vec3(x, y, 2.0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        glm::mat4 ViewMatrix = glm::lookAt(
+            glm::vec3(x, y, 2.0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         time += delta_time;
 
         glm::mat4 ModelMatrix = glm::mat4(1.0);
