@@ -222,7 +222,7 @@ int main(void) {
         // 	glm::vec3(0, 0, 0),
         // 	glm::vec3(0, 1, 0));
 
-        // glm::mat4 ViewMatrix =
+        // glm::mat5 ViewMatrix =
         //     glm::lookAt(glm::vec3(radius * sin(time), 1.5, radius *
         //     cos(time)),
         //                 glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
