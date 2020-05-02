@@ -43,6 +43,7 @@ add_definitions(
 
 add_executable(render2
 	src/render2.cpp
+    src/obj_file_loader.cpp
 )
 
 target_link_libraries(render2 ${ALL_LIBS})
@@ -78,4 +79,29 @@ target_link_libraries(render2 ${ALL_LIBS})
      TARGET eyeLike POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eyeLike${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
+     
+add_executable(3d_telecom
+   src/3d_telecom.cpp
+   src/obj_file_loader.cpp
+   src/eyeLike.cpp 
+   src/eyeLike.h
+   src/findEyeCenter.cpp 
+   src/findEyeCenter.h
+   src/findEyeCorner.cpp
+   src/findEyeCorner.h 
+   src/constants.h
+   src/helpers.cpp
+   src/helpers.h)
+
+target_link_libraries(3d_telecom ${ALL_LIBS} ${OpenCV_LIBS})
+
+ create_target_launcher(3d_telecom WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+ 
+ add_custom_command(
+     TARGET 3d_telecom POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/3d_telecom${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
