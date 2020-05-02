@@ -149,6 +149,13 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
     cv::Point rightPupil = findEyeCenter(faceROI, rightEyeRegion, "Right Eye");
 
     // TODO hard-coding
+    std::cout << "face.x = " << face.x << std::endl;
+    std::cout << "face.y = " << face.y << std::endl;
+    std::cout << "leftPupil.x + leftEyeRegion.x = "
+              << leftPupil.x + leftEyeRegion.x << std::endl;
+    std::cout << "rightPupil.x  + rightEyeRegion.x= "
+              << rightPupil.x + rightEyeRegion.x << std::endl;
+
     eye_like::left_eye_center_x =
         (double)(leftPupil.x + leftEyeRegion.x + face.x) / (double)1920;
     eye_like::left_eye_center_y =
@@ -157,6 +164,14 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
         (double)(rightPupil.x + rightEyeRegion.x + face.x) / (double)1920;
     eye_like::right_eye_center_y =
         (double)(rightPupil.y + rightEyeRegion.y + face.y) / (double)1080;
+    std::cout << "left_eye_center_x  = " << eye_like::left_eye_center_x
+              << std::endl;
+    std::cout << "left_eye_center_y  = " << eye_like::left_eye_center_y
+              << std::endl;
+    std::cout << "right_eye_center_x  = " << eye_like::right_eye_center_x
+              << std::endl;
+    std::cout << "right_eye_center_y  = " << eye_like::right_eye_center_y
+              << std::endl;
 
     // get corner regions
     cv::Rect leftRightCornerRegion(leftEyeRegion);

@@ -355,7 +355,7 @@ int run_main() {
 
     // Window生成
     GLFWwindow *window =
-        glfwCreateWindow(800, 600, "OBJ loader", nullptr, nullptr);
+        glfwCreateWindow(1600, 1200, "OBJ loader", nullptr, nullptr);
 
     if (!window) {
         // 生成失敗
@@ -405,18 +405,18 @@ int run_main() {
     while (!glfwWindowShouldClose(window)) {
         double eyex =
             (eye_like::left_eye_center_x + eye_like::right_eye_center_x) / 2 -
-            1.0;
+            0.5;
         double eyey =
             -(eye_like::left_eye_center_y + eye_like::right_eye_center_y) / 2 +
-            1.0;
+            0.5;
         eyex *= 2.0;
         eyey *= 2.0;
-        std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+        // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
 
         // 単位行列を読み込む
         glLoadIdentity();
-        glTranslatef(0, -0.5, 0.0);
-        gluLookAt(eyex, eyey, 3, 0, 0, 0, 0, 1, 0);
+        glTranslatef(0, -0.7, 0.0);
+        gluLookAt(eyex, eyey, 4, 0, 0, 0, 0, 1, 0);
 
         // 描画バッファの初期化
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
