@@ -1,10 +1,10 @@
 # How to run
-git clone https://github.com/akawashiro/3d-telecom.git
-mkdir build
-cd build
-cmake ..
-make
-./launch-3d_telecom.sh
+git clone https://github.com/akawashiro/3d-telecom.git  
+mkdir build  
+cd build  
+cmake ..  
+make  
+./launch-3d_telecom.sh  
 
 # TODO
 - なんとかしてリアルタイム3Dモデル生成をする
