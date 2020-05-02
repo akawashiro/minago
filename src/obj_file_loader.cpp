@@ -409,9 +409,9 @@ int run_main() {
         double eyey =
             -(eye_like::left_eye_center_y + eye_like::right_eye_center_y) / 2 +
             0.5;
-        eyex *= 2.0;
-        eyey *= 2.0;
-        // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+        eyex *= 8.0;
+        eyey *= 8.0;
+        std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
 
         // 単位行列を読み込む
         glLoadIdentity();

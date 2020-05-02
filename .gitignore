@@ -3,3 +3,4 @@ build/*
 src/render
 src/render2
 src/3d_telecom
+src/video_capture_speed

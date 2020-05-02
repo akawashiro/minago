@@ -38,6 +38,9 @@ cv::RNG rng(12345);
 cv::Mat debugImage;
 cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
 
+const int FRAME_WIDTH = 1280;
+const int FRAME_HEIGHT = 720;
+
 /**
  * @function main
  */
@@ -83,10 +86,12 @@ int run_main() {
     // #else
     cv::VideoCapture capture(0);
     if (capture.isOpened()) {
+        capture.set(cv::CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+        capture.set(cv::CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
         while (true) {
+            start = std::chrono::system_clock::now();
             capture.read(frame);
             // #endif
-            start = std::chrono::system_clock::now();
 
             // mirror it
             cv::flip(frame, frame, 1);
@@ -100,14 +105,6 @@ int run_main() {
                 break;
             }
 
-            end = std::chrono::system_clock::now();
-            double time = static_cast<double>(
-                std::chrono::duration_cast<std::chrono::microseconds>(end -
-                                                                      start)
-                    .count() /
-                1000.0);
-            printf("time %lf[ms]\n", time);
-
             imshow(main_window_name, debugImage);
 
             int c = cv::waitKey(10);
@@ -117,6 +114,14 @@ int run_main() {
             if ((char)c == 'f') {
                 imwrite("frame.png", frame);
             }
+
+            end = std::chrono::system_clock::now();
+            double time = static_cast<double>(
+                std::chrono::duration_cast<std::chrono::microseconds>(end -
+                                                                      start)
+                    .count() /
+                1000.0);
+            printf("time %lf[ms]\n", time);
         }
     }
 
@@ -157,13 +162,15 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
               << rightPupil.x + rightEyeRegion.x << std::endl;
 
     eye_like::left_eye_center_x =
-        (double)(leftPupil.x + leftEyeRegion.x + face.x) / (double)1920;
+        (double)(leftPupil.x + leftEyeRegion.x + face.x) / (double)FRAME_WIDTH;
     eye_like::left_eye_center_y =
-        (double)(leftPupil.y + leftEyeRegion.y + face.y) / (double)1080;
+        (double)(leftPupil.y + leftEyeRegion.y + face.y) / (double)FRAME_HEIGHT;
     eye_like::right_eye_center_x =
-        (double)(rightPupil.x + rightEyeRegion.x + face.x) / (double)1920;
+        (double)(rightPupil.x + rightEyeRegion.x + face.x) /
+        (double)FRAME_WIDTH;
     eye_like::right_eye_center_y =
-        (double)(rightPupil.y + rightEyeRegion.y + face.y) / (double)1080;
+        (double)(rightPupil.y + rightEyeRegion.y + face.y) /
+        (double)FRAME_HEIGHT;
     std::cout << "left_eye_center_x  = " << eye_like::left_eye_center_x
               << std::endl;
     std::cout << "left_eye_center_y  = " << eye_like::left_eye_center_y

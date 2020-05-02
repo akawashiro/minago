@@ -80,7 +80,6 @@ target_link_libraries(render2 ${ALL_LIBS})
          COMMAND ${CMAKE_COMMAND} -E copy
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eyeLike${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
-
      
 add_executable(3d_telecom
    src/3d_telecom.cpp
@@ -97,11 +96,23 @@ add_executable(3d_telecom
 
 target_link_libraries(3d_telecom ${ALL_LIBS} ${OpenCV_LIBS})
 
- create_target_launcher(3d_telecom WORKING_DIRECTORY
+create_target_launcher(3d_telecom WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
  
- add_custom_command(
+add_custom_command(
      TARGET 3d_telecom POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/3d_telecom${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
+# video_capture_speed
+add_executable(video_capture_speed
+   src/video_capture_speed.cpp)
+target_link_libraries(video_capture_speed ${OpenCV_LIBS})
+create_target_launcher(video_capture_speed WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET video_capture_speed POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/video_capture_speed${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
