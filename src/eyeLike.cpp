@@ -1,3 +1,5 @@
+#include "eyeLike.h"
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
@@ -40,7 +42,7 @@ cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
  * @function main
  */
 
-namespace eye_like{
+namespace eye_like {
 int run_main() {
     cv::Mat frame;
 
@@ -73,17 +75,17 @@ int run_main() {
     std::chrono::system_clock::time_point start, end;
 
     // I make an attempt at supporting both 2.x and 3.x OpenCV
-#if CV_MAJOR_VERSION < 3
-    CvCapture *capture = cvCaptureFromCAM(0);
-    if (capture) {
-        while (true) {
-            frame = cvQueryFrame(capture);
-#else
+    // #if CV_MAJOR_VERSION < 3
+    //     CvCapture *capture = cvCaptureFromCAM(0);
+    //     if (capture) {
+    //         while (true) {
+    //             frame = cvQueryFrame(capture);
+    // #else
     cv::VideoCapture capture(0);
     if (capture.isOpened()) {
         while (true) {
             capture.read(frame);
-#endif
+            // #endif
             start = std::chrono::system_clock::now();
 
             // mirror it
@@ -122,7 +124,7 @@ int run_main() {
 
     return 0;
 }
-    }
+} // namespace eye_like
 
 void findEyes(cv::Mat frame_gray, cv::Rect face) {
     cv::Mat faceROI = frame_gray(face);
@@ -145,6 +147,17 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
     //-- Find Eye Centers
     cv::Point leftPupil = findEyeCenter(faceROI, leftEyeRegion, "Left Eye");
     cv::Point rightPupil = findEyeCenter(faceROI, rightEyeRegion, "Right Eye");
+
+    // TODO hard-coding
+    eye_like::left_eye_center_x =
+        (double)(leftPupil.x + leftEyeRegion.x + face.x) / (double)1920;
+    eye_like::left_eye_center_y =
+        (double)(leftPupil.y + leftEyeRegion.y + face.y) / (double)1080;
+    eye_like::right_eye_center_x =
+        (double)(rightPupil.x + rightEyeRegion.x + face.x) / (double)1920;
+    eye_like::right_eye_center_y =
+        (double)(rightPupil.y + rightEyeRegion.y + face.y) / (double)1080;
+
     // get corner regions
     cv::Rect leftRightCornerRegion(leftEyeRegion);
     leftRightCornerRegion.width -= leftPupil.x;

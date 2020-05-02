@@ -33,7 +33,7 @@ GLFWwindow *window;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define PORT 8080
+#include "eyeLike.h"
 
 // マテリアル
 // TIPS メンバ変数にあらかじめ初期値を与えている
@@ -402,9 +402,17 @@ int run_main() {
     GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
-    double eyex = 0, eyey = 0;
-
     while (!glfwWindowShouldClose(window)) {
+        double eyex =
+            (eye_like::left_eye_center_x + eye_like::right_eye_center_x) / 2 -
+            1.0;
+        double eyey =
+            -(eye_like::left_eye_center_y + eye_like::right_eye_center_y) / 2 +
+            1.0;
+        eyex *= 2.0;
+        eyey *= 2.0;
+        std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+
         // 単位行列を読み込む
         glLoadIdentity();
         glTranslatef(0, -0.5, 0.0);
