@@ -2,3 +2,4 @@ build/*
 .vscode/*
 src/render
 src/render2
+src/3d_telecom
