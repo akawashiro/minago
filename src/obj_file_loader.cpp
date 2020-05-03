@@ -71,6 +71,16 @@ struct Face {
     int ni[3]; // 法線ベクトル番号
 };
 
+class LowPassFilter {
+  public:
+    void put(double x) { value = (1 - k) * value + k * x; }
+    double get() { return value; }
+
+  private:
+    double value = 0;
+    double k = 0.1;
+};
+
 // 画像を読み込む
 GLuint createTexture(std::string path) {
     // テクスチャを１つ生成
@@ -402,6 +412,8 @@ int run_main(std::string objfile_path) {
     GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
+    LowPassFilter x_lpf, y_lpf;
+
     while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0) {
         double eyex =
@@ -410,14 +422,18 @@ int run_main(std::string objfile_path) {
         double eyey =
             -(eye_like::left_eye_center_y + eye_like::right_eye_center_y) / 2 +
             0.5;
-        eyex *= 8.0;
-        eyey *= 8.0;
+        const double scale_x = 6.0;
+        const double scale_y = scale_x / 9 * 16;
+        eyex *= scale_x;
+        eyey *= scale_y;
         std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+        x_lpf.put(eyex);
+        y_lpf.put(eyey);
 
         // 単位行列を読み込む
         glLoadIdentity();
         glTranslatef(0, -0.7, 0.0);
-        gluLookAt(eyex, eyey, 4, 0, 0, 0, 0, 1, 0);
+        gluLookAt(x_lpf.get(), y_lpf.get(), 4, 0, 0, 0, 0, 1, 0);
 
         // 描画バッファの初期化
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
