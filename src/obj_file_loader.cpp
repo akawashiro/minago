@@ -402,7 +402,8 @@ int run_main() {
     GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
-    while (!glfwWindowShouldClose(window)) {
+    while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
+           glfwWindowShouldClose(window) == 0) {
         double eyex =
             (eye_like::left_eye_center_x + eye_like::right_eye_center_x) / 2 -
             0.5;

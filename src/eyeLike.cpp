@@ -108,7 +108,7 @@ int run_main() {
             imshow(main_window_name, debugImage);
 
             int c = cv::waitKey(10);
-            if ((char)c == 'c') {
+            if ((char)c == 'q') {
                 break;
             }
             if ((char)c == 'f') {
