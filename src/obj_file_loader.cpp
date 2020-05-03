@@ -348,7 +348,7 @@ void drawMesh(const Mesh &mesh) {
 
 namespace obj_file_loader {
 
-int run_main() {
+int run_main(std::string objfile_path) {
     // 初期化
     if (!glfwInit())
         return -1;
@@ -370,7 +370,7 @@ int run_main() {
 
     // これ以降OpenGLの命令が使える
 
-    Obj obj = loadObj("LibertStatue.obj");
+    Obj obj = loadObj(objfile_path);
 
     // 拡散光と鏡面反射を個別に計算する
     // TIPS:これで、テクスチャを張ったポリゴンもキラーン!!ってなる

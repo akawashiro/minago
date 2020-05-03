@@ -46,7 +46,7 @@ const int FRAME_HEIGHT = 720;
  */
 
 namespace eye_like {
-int run_main() {
+int run_main(std::pair<int, int>) {
     cv::Mat frame;
 
     // Load the cascades

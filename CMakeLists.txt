@@ -4,6 +4,7 @@ project(3d-telecom)
 
 find_package(OpenGL REQUIRED) 
 find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED COMPONENTS program_options)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_BINARY_DIR ${PROJECT_BINARY_DIR}/bin)
@@ -92,9 +93,10 @@ add_executable(3d_telecom
    src/findEyeCorner.h 
    src/constants.h
    src/helpers.cpp
-   src/helpers.h)
+   src/helpers.h
+   )
 
-target_link_libraries(3d_telecom ${ALL_LIBS} ${OpenCV_LIBS})
+target_link_libraries(3d_telecom ${ALL_LIBS} ${OpenCV_LIBS} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 create_target_launcher(3d_telecom WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
