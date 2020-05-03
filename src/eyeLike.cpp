@@ -38,15 +38,18 @@ cv::RNG rng(12345);
 cv::Mat debugImage;
 cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
 
-const int FRAME_WIDTH = 1280;
-const int FRAME_HEIGHT = 720;
+int FRAME_WIDTH = 1280;
+int FRAME_HEIGHT = 720;
 
 /**
  * @function main
  */
 
 namespace eye_like {
-int run_main(std::pair<int, int>) {
+int run_main(std::pair<int, int> resolution, bool enable_image) {
+    FRAME_WIDTH = resolution.first;
+    FRAME_HEIGHT = resolution.second;
+
     cv::Mat frame;
 
     // Load the cascades
@@ -105,14 +108,16 @@ int run_main(std::pair<int, int>) {
                 break;
             }
 
-            imshow(main_window_name, debugImage);
+            if (enable_image) {
+                imshow(main_window_name, debugImage);
 
-            int c = cv::waitKey(10);
-            if ((char)c == 'q') {
-                break;
-            }
-            if ((char)c == 'f') {
-                imwrite("frame.png", frame);
+                int c = cv::waitKey(10);
+                if ((char)c == 'q') {
+                    break;
+                }
+                if ((char)c == 'f') {
+                    imwrite("frame.png", frame);
+                }
             }
 
             end = std::chrono::system_clock::now();

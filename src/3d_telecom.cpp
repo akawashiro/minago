@@ -15,8 +15,7 @@ int main(int argc, const char **argv) {
                 "LibertStatue.obj"),
             "Path to the .obj file")(
             "resolution",
-            boost::program_options::value<std::pair<int, int>>()->default_value(
-                {1280, 720}),
+            boost::program_options::value<std::vector<int>>()->multitoken(),
             "Resolution of camera (1280 720 in default)")(
             "not-show-image", "do not show images from the camera");
 
@@ -26,6 +25,7 @@ int main(int argc, const char **argv) {
 
         std::string objfile = "LibertStatue.obj";
         std::pair<int, int> resolution = {1280, 720};
+        bool enable_image = true;
 
         if (vm.count("help")) {
             std::cout << desc << '\n';
@@ -35,11 +35,21 @@ int main(int argc, const char **argv) {
             objfile = vm["obj"].as<std::string>();
         }
         if (vm.count("resolution")) {
-            resolution = vm["resolution"].as<std::pair<int, int>>();
+            auto v = vm["resolution"].as<std::vector<int>>();
+            if (v.size() == 2) {
+                resolution = {v[0], v[1]};
+            } else {
+                std::cout << "You must give two integers to resolution "
+                             "option.";
+                return 1;
+            }
+        }
+        if (vm.count("not-show-image")) {
+            enable_image = false;
         }
 
-        std::thread th1(obj_file_loader::run_main(objfile));
-        std::thread th2(eye_like::run_main(resolution));
+        std::thread th1(obj_file_loader::run_main, objfile);
+        std::thread th2(eye_like::run_main, resolution, enable_image);
         th1.join();
         th2.join();
         return 0;
