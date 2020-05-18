@@ -30,8 +30,10 @@ include_directories(
 
 set(ALL_LIBS 
 	${OPENGL_LIBRARY}
+    ${OpenCV_LIBS}
 	glfw 
 	GLEW_1130
+    realsense2
 )
 
 add_definitions(
@@ -71,7 +73,7 @@ target_link_libraries(render2 ${ALL_LIBS})
      src/helpers.cpp
      src/helpers.h)
  
- target_link_libraries(eyeLike ${OpenCV_LIBS})
+ target_link_libraries(eyeLike ${ALL_LIBS})
  
  create_target_launcher(eyeLike WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
@@ -96,7 +98,7 @@ add_executable(3d_telecom
    src/helpers.h
    )
 
-target_link_libraries(3d_telecom ${ALL_LIBS} ${OpenCV_LIBS} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(3d_telecom ${ALL_LIBS} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 create_target_launcher(3d_telecom WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
@@ -110,7 +112,7 @@ add_custom_command(
 # video_capture_speed
 add_executable(video_capture_speed
    src/video_capture_speed.cpp)
-target_link_libraries(video_capture_speed ${OpenCV_LIBS})
+target_link_libraries(video_capture_speed ${ALL_LIBS})
 create_target_launcher(video_capture_speed WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 add_custom_command(
@@ -118,3 +120,27 @@ add_custom_command(
          COMMAND ${CMAKE_COMMAND} -E copy
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/video_capture_speed${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
+# rs-pointcloud
+add_executable(rs-pointcloud
+    src/rs-pointcloud.cpp
+    src/example.hpp
+    src/eyeLike.cpp 
+    src/eyeLike.h
+    src/findEyeCenter.cpp 
+    src/findEyeCenter.h
+    src/findEyeCorner.cpp
+    src/findEyeCorner.h 
+    src/constants.h
+    src/helpers.cpp
+    src/helpers.h)
+    
+target_link_libraries(rs-pointcloud ${ALL_LIBS})
+create_target_launcher(rs-pointcloud WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET rs-pointcloud POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/rs-pointcloud${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+

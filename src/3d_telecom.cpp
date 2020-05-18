@@ -48,7 +48,10 @@ int main(int argc, const char **argv) {
             enable_image = false;
         }
 
-        std::thread th1(obj_file_loader::run_main, objfile);
+        std::thread th1(
+            obj_file_loader::run_main, objfile, &eye_like::left_eye_center_x,
+            &eye_like::right_eye_center_x, &eye_like::left_eye_center_y,
+            &eye_like::right_eye_center_y);
         std::thread th2(eye_like::run_main, resolution, enable_image);
         th1.join();
         th2.join();

@@ -358,7 +358,10 @@ void drawMesh(const Mesh &mesh) {
 
 namespace obj_file_loader {
 
-int run_main(std::string objfile_path) {
+int run_main(std::string objfile_path, const double *const left_eye_center_x,
+             const double *const right_eye_center_x,
+             const double *const left_eye_center_y,
+             const double *const right_eye_center_y) {
     // 初期化
     if (!glfwInit())
         return -1;
@@ -416,12 +419,8 @@ int run_main(std::string objfile_path) {
 
     while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0) {
-        double eyex =
-            (eye_like::left_eye_center_x + eye_like::right_eye_center_x) / 2 -
-            0.5;
-        double eyey =
-            -(eye_like::left_eye_center_y + eye_like::right_eye_center_y) / 2 +
-            0.5;
+        double eyex = (*left_eye_center_x + *right_eye_center_x) / 2 - 0.5;
+        double eyey = -(*left_eye_center_y + *right_eye_center_y) / 2 + 0.5;
         const double scale_x = 6.0;
         const double scale_y = scale_x / 9 * 16;
         eyex *= scale_x;
