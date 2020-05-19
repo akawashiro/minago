@@ -25,6 +25,7 @@ void register_glfw_callbacks(window &app, glfw_state &app_state);
 int main(int argc, char *argv[]) try {
     std::string main_window_name = "Capture - Face detection";
     std::string face_window_name = "Capture - Face";
+    eye_like::init();
 
     // cv::namedWindow(main_window_name, CV_WINDOW_NORMAL);
     // cv::moveWindow(main_window_name, 400, 100);
@@ -36,11 +37,11 @@ int main(int argc, char *argv[]) try {
     // cv::moveWindow("Left Eye", 10, 800);
 
     // Create a simple OpenGL window for rendering:
-    // window app(1280, 720, "RealSense Pointcloud Example");
+    window app(1280, 720, "RealSense Pointcloud Example");
     // Construct an object to manage view state
     glfw_state app_state;
     // register callbacks to allow manipulation of the pointcloud
-    // register_glfw_callbacks(app, app_state);
+    register_glfw_callbacks(app, app_state);
 
     // Declare pointcloud object, for calculating pointclouds and texture
     // mappings
@@ -52,59 +53,63 @@ int main(int argc, char *argv[]) try {
     rs2::config cfg;
     // cfg.enable_stream(RS2_STREAM_COLOR, 720, 500, RS2_FORMAT_BGR8, 30);
     // cfg.enable_stream(RS2_STREAM_DEPTH, 720, 500, RS2_FORMAT_Z16, 30);
-    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30);
-    cfg.enable_stream(RS2_STREAM_COLOR, 1280, 720, RS2_FORMAT_RGB8, 30);
+    // cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30);
+    // cfg.enable_stream(RS2_STREAM_COLOR, 1280, 720, RS2_FORMAT_RGB8, 30);
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
-    pipe.start(cfg);
+    pipe.start();
 
     std::chrono::system_clock::time_point start, end;
 
-    // while (app) // Application still alive?
-    while (cv::waitKey(1) == -1) {
+    // while (cv::waitKey(1) == -1) {
+    while (app) { // Application still alive?
         start = std::chrono::system_clock::now();
         // Wait for the next set of frames from the camera
         auto frames = pipe.wait_for_frames();
 
         auto color = frames.get_color_frame();
-        cv::Mat opencv_color(cv::Size(1280, 720), CV_8UC3,
-                             (void *)color.get_data(), cv::Mat::AUTO_STEP);
-        cv::Mat screen;
-        cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
-        printf("w = %d, h = %d\n", color.get_width(), color.get_height());
-        // if(!opencv_color.empty())
-        cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
-        cv::imshow("color", screen);
+        {
+            cv::Mat opencv_color(cv::Size(1280, 720), CV_8UC3,
+                                 (void *)color.get_data(), cv::Mat::AUTO_STEP);
+            cv::Mat screen;
+            cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
+            printf("w = %d, h = %d\n", color.get_width(), color.get_height());
+            if (!screen.empty()) {
+                printf("Hello\n");
+                cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
+                // cv::imshow("color", screen);
+                eye_like::detectAndDisplay(screen);
+            }
+        }
 
-        // // For cameras that don't have RGB sensor, we'll map the pointcloud
+        // For cameras that don't have RGB sensor, we'll map the pointcloud
         // to
-        // // infrared instead of color
-        // if (!color)
-        //     color = frames.get_infrared_frame();
+        // infrared instead of color
+        if (!color)
+            color = frames.get_infrared_frame();
 
-        // // Tell pointcloud object to map to this color frame
-        // pc.map_to(color);
+        // Tell pointcloud object to map to this color frame
+        pc.map_to(color);
 
-        // auto depth = frames.get_depth_frame();
+        auto depth = frames.get_depth_frame();
 
-        // // Generate the pointcloud and texture mappings
-        // points = pc.calculate(depth);
+        // Generate the pointcloud and texture mappings
+        points = pc.calculate(depth);
 
-        // // Upload the color frame to OpenGL
-        // app_state.tex.upload(color);
+        // Upload the color frame to OpenGL
+        app_state.tex.upload(color);
 
-        // // Draw the pointcloud
-        // // draw_pointcloud(app.width(), app.height(), app_state, points);
+        // Draw the pointcloud
+        draw_pointcloud(app.width(), app.height(), app_state, points);
 
-        // end = std::chrono::system_clock::now();
-        // double time = static_cast<double>(
-        //     std::chrono::duration_cast<std::chrono::microseconds>(end -
-        //     start)
-        //         .count() /
-        //     1000.0);
-        // printf("time %lf[ms]\n", time);
+        end = std::chrono::system_clock::now();
+        double time = static_cast<double>(
+            std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+                .count() /
+            1000.0);
+        printf("time %lf[ms]\n", time);
     }
 
     return EXIT_SUCCESS;

@@ -211,12 +211,7 @@ void detectAndDisplay(cv::Mat frame) {
     }
 }
 
-int run_main(std::pair<int, int> resolution, bool enable_image) {
-    FRAME_WIDTH = resolution.first;
-    FRAME_HEIGHT = resolution.second;
-
-    cv::Mat frame;
-
+int init() {
     // Load the cascades
     if (!face_cascade.load(face_cascade_name)) {
         printf(
@@ -224,6 +219,16 @@ int run_main(std::pair<int, int> resolution, bool enable_image) {
             "in source code.\n");
         return -1;
     };
+}
+
+int run_main(std::pair<int, int> resolution, bool enable_image) {
+    cv::Mat frame;
+
+    FRAME_WIDTH = resolution.first;
+    FRAME_HEIGHT = resolution.second;
+
+    init();
+
     cv::namedWindow(main_window_name, CV_WINDOW_NORMAL);
     cv::moveWindow(main_window_name, 400, 100);
     cv::namedWindow(face_window_name, CV_WINDOW_NORMAL);

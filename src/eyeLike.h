@@ -14,6 +14,7 @@ inline double right_eye_center_x = 0;
 inline double right_eye_center_y = 0;
 
 void detectAndDisplay(cv::Mat frame);
+int init();
 int run_main(std::pair<int, int> resolution, bool enable_image);
 
 } // namespace eye_like
