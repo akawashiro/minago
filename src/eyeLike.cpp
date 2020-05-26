@@ -173,6 +173,12 @@ cv::Mat findSkin(cv::Mat &frame) {
 
 namespace eye_like {
 
+EyesPosition detect_eyes_position(cv::Mat frame) {
+    detectAndDisplay(frame);
+    return {left_eye_center_x, left_eye_center_y, right_eye_center_x,
+            right_eye_center_y};
+}
+
 /**
  * @function detectAndDisplay
  */

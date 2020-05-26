@@ -96,6 +96,7 @@ add_executable(3d_telecom
    src/constants.h
    src/helpers.cpp
    src/helpers.h
+   src/thread_safe_queue.cpp
    )
 
 target_link_libraries(3d_telecom ${ALL_LIBS} ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -142,5 +143,31 @@ add_custom_command(
      TARGET rs-pointcloud POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/rs-pointcloud${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
+# camera
+add_executable(camera
+    src/camera_main.cpp
+    src/camera.cpp
+    src/example.hpp
+    src/eyeLike.cpp 
+    src/eyeLike.h
+    src/findEyeCenter.cpp 
+    src/findEyeCenter.h
+    src/findEyeCorner.cpp
+    src/findEyeCorner.h 
+    src/constants.h
+    src/helpers.cpp
+    src/helpers.h
+    src/thread_safe_queue.cpp
+    src/thread_safe_queue.h)
+    
+target_link_libraries(camera ${ALL_LIBS})
+create_target_launcher(camera WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET camera POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/camera${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
