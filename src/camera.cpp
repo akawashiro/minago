@@ -18,13 +18,18 @@
 
 namespace camera {
 int camera_main_loop(
-    ThreadSafeQueuePushViewer<eye_like::EyesPosition> &pos_queue) try {
+    ThreadSafeQueuePushViewer<eye_like::EyesPosition> &eye_pos_queue,
+    ThreadSafeQueuePushViewer<rs2_frame_data> &frame_queue) try {
     eye_like::init();
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
-    pipe.start();
+    auto profile = pipe.start();
+
+    for (auto &&sensor : profile.get_device().query_sensors()) {
+        sensor.set_option(RS2_OPTION_FRAMES_QUEUE_SIZE, 0);
+    }
 
     std::chrono::system_clock::time_point start, end;
 
@@ -33,6 +38,7 @@ int camera_main_loop(
         // Wait for the next set of frames from the camera
         auto frames = pipe.wait_for_frames();
 
+        auto depth = frames.get_depth_frame();
         auto color = frames.get_color_frame();
 
         cv::Mat opencv_color(cv::Size(1280, 720), CV_8UC3,
@@ -44,8 +50,13 @@ int camera_main_loop(
             cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
             eye_like::detectAndDisplay(screen);
             eyes_position = eye_like::detect_eyes_position(screen);
-            pos_queue.push(eyes_position);
+            eye_pos_queue.push(eyes_position);
         }
+
+        depth.keep();
+        color.keep();
+
+        frame_queue.push({depth, color});
 
         double eyex = (eyes_position.left_eye_center_x +
                        eyes_position.right_eye_center_x) /

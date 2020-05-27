@@ -171,3 +171,30 @@ add_custom_command(
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/camera${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
+# minago
+add_executable(minago
+    src/minago.cpp
+    src/camera.cpp
+    src/renderer.cpp
+    src/example.hpp
+    src/eyeLike.cpp 
+    src/eyeLike.h
+    src/findEyeCenter.cpp 
+    src/findEyeCenter.h
+    src/findEyeCorner.cpp
+    src/findEyeCorner.h 
+    src/constants.h
+    src/helpers.cpp
+    src/helpers.h
+    src/thread_safe_queue.cpp
+    src/thread_safe_queue.h)
+    
+target_link_libraries(minago ${ALL_LIBS})
+create_target_launcher(minago WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET minago POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/camera${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+

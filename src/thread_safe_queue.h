@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -29,6 +31,15 @@ template <class T> class ThreadSafeQueue {
         que.pop();
     }
 
+    std::shared_ptr<T> pop() {
+        std::lock_guard<std::mutex> lock(m);
+        if (que.empty())
+            throw EmptyQueueException();
+        auto const res = std::make_shared<T>(que.front());
+        que.pop();
+        return res;
+    }
+
     void push(T value) {
         std::lock_guard<std::mutex> lock(m);
         que.push(value);
@@ -50,6 +61,7 @@ template <class T> class ThreadSafeQueuePushViewer {
     explicit ThreadSafeQueuePushViewer(ThreadSafeQueue<T> &que_) : que(que_) {
         if (que.have_push_viewer)
             throw QueueOccupiedException();
+        que.have_push_viewer = true;
     }
     ~ThreadSafeQueuePushViewer() { que.have_push_viewer = false; }
 
@@ -59,13 +71,15 @@ template <class T> class ThreadSafeQueuePushViewer {
 
 template <typename T> class ThreadSafeQueuePopViewer {
   public:
-    bool empty() const { return que->empty(); }
-    void pop(T &res) { que->pop(res); }
+    bool empty() const { return que.empty(); }
+    void pop(T &res) { que.pop(res); }
+    std::shared_ptr<T> pop() { return std::move(que.pop()); }
     explicit ThreadSafeQueuePopViewer(ThreadSafeQueue<T> &que_) : que(que_) {
         if (que.have_pop_viewer)
             throw QueueOccupiedException();
+        que.have_pop_viewer = true;
     }
-    ~ThreadSafeQueuePopViewer() { que->have_pop_viewer = false; }
+    ~ThreadSafeQueuePopViewer() { que.have_pop_viewer = false; }
 
   private:
     ThreadSafeQueue<T> &que;
