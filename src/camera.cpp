@@ -34,6 +34,8 @@ int camera_main_loop(
     }
 
     std::chrono::system_clock::time_point start, end;
+    rs2::pointcloud pc;
+    rs2::points points;
 
     while (1) {
         start = std::chrono::system_clock::now();
@@ -57,21 +59,46 @@ int camera_main_loop(
 
         depth.keep();
         color.keep();
+        {
+            rs2_frame_data f;
+            f.height = color.get_height();
+            f.width = color.get_width();
+            std::shared_ptr<uint8_t[]> rgb_tmp(
+                new uint8_t[3 * f.width * f.height]);
+            f.rgb = rgb_tmp;
+            memcpy(f.rgb.get(), color.get_data(),
+                   sizeof(uint8_t) * 3 * f.width * f.height);
 
-        frame_queue.push({depth, color});
+            pc.map_to(color);
+            points = pc.calculate(depth);
+            f.n_points = points.size();
+            std::shared_ptr<rs2::vertex[]> vertices_tmp(
+                new rs2::vertex[f.n_points]);
+            f.vertices = vertices_tmp;
+            memcpy(f.vertices.get(), points.get_vertices(),
+                   sizeof(rs2::vertex) * f.n_points);
+            std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
+                new rs2::texture_coordinate[f.n_points]);
+            f.texture_coordinates = texture_coordinates_tmp;
+            memcpy(f.texture_coordinates.get(),
+                   points.get_texture_coordinates(),
+                   sizeof(rs2::texture_coordinate) * f.n_points);
 
-        double eyex = (eyes_position.left_eye_center_x +
-                       eyes_position.right_eye_center_x) /
-                          2 -
-                      0.5;
-        double eyey = -(eyes_position.left_eye_center_y +
-                        eyes_position.right_eye_center_y) /
-                          2 +
-                      0.5;
-        const double scale_x = 1.0;
-        const double scale_y = scale_x / 9 * 16;
-        eyex *= scale_x;
-        eyey *= scale_y;
+            frame_queue.push(f);
+        }
+
+        // double eyex = (eyes_position.left_eye_center_x +
+        //                eyes_position.right_eye_center_x) /
+        //                   2 -
+        //               0.5;
+        // double eyey = -(eyes_position.left_eye_center_y +
+        //                 eyes_position.right_eye_center_y) /
+        //                   2 +
+        //               0.5;
+        // const double scale_x = 1.0;
+        // const double scale_y = scale_x / 9 * 16;
+        // eyex *= scale_x;
+        // eyey *= scale_y;
         // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
 
         end = std::chrono::system_clock::now();

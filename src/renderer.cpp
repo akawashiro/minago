@@ -152,41 +152,25 @@ int renderer_main_loop(
 
     GLuint gl_texture_id = 0;
 
+    int n_points;
+    std::shared_ptr<rs2::vertex[]> vertices;
+    std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates;
+
     while (app) { // Application still alive?
         start = std::chrono::system_clock::now();
         if (!frame_queue.empty()) {
             auto f = frame_queue.pop();
 
-            // Tell pointcloud object to map to this color frame
-            pc.map_to(f->color);
+            int height = f->height;
+            int width = f->width;
+            n_points = f->n_points;
+            vertices = f->vertices;
+            texture_coordinates = f->texture_coordinates;
 
-            // Generate the pointcloud and texture mappings
-            points = pc.calculate(f->depth);
-
-            int height = f->color.get_height();
-            int width = f->color.get_width();
-
-            // We need scope for shared_ptr.
-            {
-                std::shared_ptr<uint8_t[]> sp(new uint8_t[3 * width * height]);
-                memcpy(sp.get(), f->color.get_data(),
-                       sizeof(uint8_t) * 3 * width * height);
-                upload_texture(sp.get(), width, height, gl_texture_id);
-            }
+            upload_texture(f->rgb.get(), width, height, gl_texture_id);
         }
-        eye_position = eye_pos_get.get();
-
-        if (points) {
-            int n_points = points.size();
-            std::shared_ptr<rs2::vertex[]> vertices(new rs2::vertex[n_points]);
-            memcpy(vertices.get(), points.get_vertices(),
-                   sizeof(rs2::vertex) * n_points);
-            std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates(
-                new rs2::texture_coordinate[n_points]);
-            memcpy(texture_coordinates.get(), points.get_texture_coordinates(),
-                   sizeof(rs2::texture_coordinate) * n_points);
-
-            // Draw the pointcloud
+        if (vertices && texture_coordinates) {
+            eye_position = eye_pos_get.get();
             draw_pointcloud_render(app.width(), app.height(), app_state,
                                    eye_position, n_points, vertices.get(),
                                    texture_coordinates.get(), gl_texture_id);

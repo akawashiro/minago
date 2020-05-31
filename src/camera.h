@@ -9,8 +9,10 @@
 namespace camera {
 
 struct rs2_frame_data {
-    rs2::depth_frame depth;
-    rs2::video_frame color;
+    int height, width, n_points;
+    std::shared_ptr<uint8_t[]> rgb;
+    std::shared_ptr<rs2::vertex[]> vertices;
+    std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates;
 };
 
 int camera_main_loop(
