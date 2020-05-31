@@ -42,7 +42,10 @@ void upload_texture(uint8_t *color_data, int width, int height, GLuint &id) {
 // Handles all the OpenGL calls needed to display the point cloud
 void draw_pointcloud_render(float width, float height, glfw_state &app_state,
                             eye_like::EyesPosition eye_position,
-                            rs2::points &points, GLuint gl_texture_id) {
+                            rs2::points &points, int n_point,
+                            const rs2::vertex *vetcies,
+                            const rs2::texture_coordinate *tex_coords,
+                            GLuint gl_texture_id) {
     double eyex =
         (eye_position.left_eye_center_x + eye_position.right_eye_center_x) / 2 -
         0.5;
@@ -167,10 +170,16 @@ int renderer_main_loop(
             // Generate the pointcloud and texture mappings
             points = pc.calculate(f->depth);
 
-            // Upload the color frame to OpenGL
-            // app_state.tex.upload(f->color);
-            upload_texture((uint8_t *)f->color.get_data(), f->color.get_width(),
-                           f->color.get_height(), gl_texture_id);
+            int height = f->color.get_height();
+            int width = f->color.get_width();
+
+            // We need scope for shared_ptr.
+            {
+                std::shared_ptr<uint8_t[]> sp(new uint8_t[3 * width * height]);
+                memcpy(sp.get(), f->color.get_data(),
+                       sizeof(uint8_t) * 3 * width * height);
+                upload_texture(sp.get(), width, height, gl_texture_id);
+            }
         }
         eye_position = eye_pos_get.get();
 
