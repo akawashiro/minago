@@ -41,9 +41,8 @@ void upload_texture(uint8_t *color_data, int width, int height, GLuint &id) {
 
 // Handles all the OpenGL calls needed to display the point cloud
 void draw_pointcloud_render(float width, float height, glfw_state &app_state,
-                            eye_like::EyesPosition eye_position,
-                            rs2::points &points, int n_point,
-                            const rs2::vertex *vetcies,
+                            eye_like::EyesPosition eye_position, int n_point,
+                            const rs2::vertex *vertices,
                             const rs2::texture_coordinate *tex_coords,
                             GLuint gl_texture_id) {
     double eyex =
@@ -58,9 +57,6 @@ void draw_pointcloud_render(float width, float height, glfw_state &app_state,
     eyex *= scale_x;
     eyey *= scale_y;
     // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
-
-    if (!points)
-        return;
 
     // OpenGL commands that prep screen for the pointcloud
     glLoadIdentity();
@@ -96,26 +92,23 @@ void draw_pointcloud_render(float width, float height, glfw_state &app_state,
                     0x812F); // GL_CLAMP_TO_EDGE
     glBegin(GL_POINTS);
 
-    float max_x = FLT_MIN, min_x = FLT_MAX;
-    float max_y = FLT_MIN, min_y = FLT_MAX;
-    float max_z = FLT_MIN, min_z = FLT_MAX;
-    /* this segment actually prints the pointcloud */
-    auto vertices = points.get_vertices(); // get vertices
-    auto tex_coords =
-        points.get_texture_coordinates(); // and texture coordinates
-    for (int i = 0; i < points.size(); i++) {
+    // float max_x = FLT_MIN, min_x = FLT_MAX;
+    // float max_y = FLT_MIN, min_y = FLT_MAX;
+    // float max_z = FLT_MIN, min_z = FLT_MAX;
+
+    for (int i = 0; i < n_point; i++) {
         if (vertices[i].z) {
             // upload the point and texture coordinates only for points we have
             // depth data for
             glVertex3fv(vertices[i]);
             glTexCoord2fv(tex_coords[i]);
 
-            max_x = std::max(max_x, vertices[i].x);
-            min_x = std::min(min_x, vertices[i].x);
-            max_y = std::max(max_y, vertices[i].y);
-            min_y = std::min(min_y, vertices[i].y);
-            max_z = std::max(max_z, vertices[i].z);
-            min_z = std::min(min_z, vertices[i].z);
+            // max_x = std::max(max_x, vertices[i].x);
+            // min_x = std::min(min_x, vertices[i].x);
+            // max_y = std::max(max_y, vertices[i].y);
+            // min_y = std::min(min_y, vertices[i].y);
+            // max_z = std::max(max_z, vertices[i].z);
+            // min_z = std::min(min_z, vertices[i].z);
         }
     }
     // std::cout << "max_x = " << max_x << ", min_x = " << min_x << std::endl;
@@ -183,9 +176,21 @@ int renderer_main_loop(
         }
         eye_position = eye_pos_get.get();
 
-        // Draw the pointcloud
-        draw_pointcloud_render(app.width(), app.height(), app_state,
-                               eye_position, points, gl_texture_id);
+        if (points) {
+            int n_points = points.size();
+            std::shared_ptr<rs2::vertex[]> vertices(new rs2::vertex[n_points]);
+            memcpy(vertices.get(), points.get_vertices(),
+                   sizeof(rs2::vertex) * n_points);
+            std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates(
+                new rs2::texture_coordinate[n_points]);
+            memcpy(texture_coordinates.get(), points.get_texture_coordinates(),
+                   sizeof(rs2::texture_coordinate) * n_points);
+
+            // Draw the pointcloud
+            draw_pointcloud_render(app.width(), app.height(), app_state,
+                                   eye_position, n_points, vertices.get(),
+                                   texture_coordinates.get(), gl_texture_id);
+        }
 
         end = std::chrono::system_clock::now();
         double time = static_cast<double>(
