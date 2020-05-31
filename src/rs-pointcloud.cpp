@@ -1,15 +1,12 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2015-2017 Intel Corporation. All Rights Reserved.
 
-#include "example.hpp" // Include short list of convenience functions for rendering
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/objdetect/objdetect.hpp>
 
 #include <algorithm> // std::min, std::max
-
-#include "eyeLike.h"
+#include <iostream>
 
 /* Attempt at supporting openCV version 4.0.1 or higher */
 #if CV_MAJOR_VERSION >= 4
@@ -19,105 +16,166 @@
 #define CV_HAAR_FIND_BIGGEST_OBJECT cv::CASCADE_FIND_BIGGEST_OBJECT
 #endif
 
-// Helper functions
-void register_glfw_callbacks(window &app, glfw_state &app_state);
+GLuint create_texture(uint8_t *color_data, int width, int height) {
+    GLuint id;
+    glGenTextures(1, &id);
 
-int main(int argc, char *argv[]) try {
-    std::string main_window_name = "Capture - Face detection";
-    std::string face_window_name = "Capture - Face";
-    eye_like::init();
+    // テクスチャを拘束
+    // NOTICE 以下テクスチャに対する命令は拘束したテクスチャに対して実行される
+    glBindTexture(GL_TEXTURE_2D, id);
 
-    // cv::namedWindow(main_window_name, CV_WINDOW_NORMAL);
-    // cv::moveWindow(main_window_name, 400, 100);
-    // cv::namedWindow(face_window_name, CV_WINDOW_NORMAL);
-    // cv::moveWindow(face_window_name, 10, 100);
-    // cv::namedWindow("Right Eye", CV_WINDOW_NORMAL);
-    // cv::moveWindow("Right Eye", 10, 600);
-    // cv::namedWindow("Left Eye", CV_WINDOW_NORMAL);
-    // cv::moveWindow("Left Eye", 10, 800);
+    // We assume RS2_FORMAT_RGB8
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, color_data);
 
-    // Create a simple OpenGL window for rendering:
-    window app(1280, 720, "RealSense Pointcloud Example");
-    // Construct an object to manage view state
-    glfw_state app_state;
-    // register callbacks to allow manipulation of the pointcloud
-    register_glfw_callbacks(app, app_state);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    // glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Declare pointcloud object, for calculating pointclouds and texture
-    // mappings
-    rs2::pointcloud pc;
-    // We want the points object to be persistent so we can display the last
-    // cloud when a frame drops
-    rs2::points points;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    rs2::config cfg;
-    // cfg.enable_stream(RS2_STREAM_COLOR, 720, 500, RS2_FORMAT_BGR8, 30);
-    // cfg.enable_stream(RS2_STREAM_DEPTH, 720, 500, RS2_FORMAT_Z16, 30);
-    // cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30);
-    // cfg.enable_stream(RS2_STREAM_COLOR, 1280, 720, RS2_FORMAT_RGB8, 30);
+    return id;
+}
 
+int main(int argc, char *argv[]) {
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
     pipe.start();
 
+    // 初期化
+    if (!glfwInit())
+        return -1;
+
+    // Window生成
+    GLFWwindow *window =
+        glfwCreateWindow(1200, 900, "OBJ loader", nullptr, nullptr);
+
+    if (!window) {
+        // 生成失敗
+        glfwTerminate();
+        return -1;
+    }
+
+    // OpenGLの命令を使えるようにする
+    glfwMakeContextCurrent(window);
+    // アプリ画面更新タイミングをPCディスプレイに同期する
+    glfwSwapInterval(1);
+
+    // 拡散光と鏡面反射を個別に計算する
+    // TIPS:これで、テクスチャを張ったポリゴンもキラーン!!ってなる
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+
+    // 透視変換行列を設定
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(35.0, 640 / 480.0, 0.2, 200.0);
+
+    // 操作対象の行列をモデリングビュー行列に切り替えておく
+    glMatrixMode(GL_MODELVIEW);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+
+    // 並行光源の設定
+    GLfloat diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+
+    GLfloat ambient[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+
+    GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+
     std::chrono::system_clock::time_point start, end;
 
-    // while (cv::waitKey(1) == -1) {
-    while (app) { // Application still alive?
+    while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
+           glfwWindowShouldClose(window) == 0) {
         start = std::chrono::system_clock::now();
-        // Wait for the next set of frames from the camera
+
         auto frames = pipe.wait_for_frames();
 
         auto color = frames.get_color_frame();
-        {
-            cv::Mat opencv_color(cv::Size(1280, 720), CV_8UC3,
-                                 (void *)color.get_data(), cv::Mat::AUTO_STEP);
-            cv::Mat screen;
-            cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
-            printf("w = %d, h = %d\n", color.get_width(), color.get_height());
-            if (!screen.empty()) {
-                printf("Hello\n");
-                cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
-                // cv::imshow("color", screen);
-                eye_like::detectAndDisplay(screen);
-            }
-        }
-
-        // For cameras that don't have RGB sensor, we'll map the pointcloud
-        // to
-        // infrared instead of color
-        if (!color)
-            color = frames.get_infrared_frame();
-
-        // Tell pointcloud object to map to this color frame
-        pc.map_to(color);
-
         auto depth = frames.get_depth_frame();
 
-        // Generate the pointcloud and texture mappings
-        points = pc.calculate(depth);
+        std::cout << "color: " << std::endl
+                  << "width = " << color.get_width()
+                  << " height = " << color.get_height()
+                  << " stride = " << color.get_stride_in_bytes()
+                  << " bit per pixel = " << color.get_bits_per_pixel()
+                  << std::endl;
+        std::cout << "depth: " << std::endl
+                  << "width = " << depth.get_width()
+                  << " height = " << depth.get_height()
+                  << " stride = " << depth.get_stride_in_bytes()
+                  << " bit per pixel = " << depth.get_bits_per_pixel()
+                  << std::endl;
 
-        // Upload the color frame to OpenGL
-        app_state.tex.upload(color);
+        // 単位行列を読み込む
+        glLoadIdentity();
+        glTranslatef(0, 0.0, 0.0);
+        gluLookAt(0, 2, 4, 0, 0, 0, 0, 1, 0);
 
-        // Draw the pointcloud
-        draw_pointcloud(app.width(), app.height(), app_state, points);
+        // 描画バッファの初期化
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // ライトの設定
+        // GLfloat position[] = {0.0f, 0.0f, 4.0f, 0.0f};
+        // glLightfv(GL_LIGHT0, GL_POSITION, position);
+
+        // 描画
+        int width = color.get_width();
+        int height = color.get_height();
+        uint8_t *color_data = (uint8_t *)color.get_data();
+        uint16_t *depth_data = (uint16_t *)depth.get_data();
+
+        glPointSize(1.0 / width);
+        glBindTexture(GL_TEXTURE_2D, create_texture(color_data, width, height));
+        glBegin(GL_POINTS);
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                // glColor3f(
+                //     ((GLfloat)color_data[i * width * 3 + j * 3 + 0]) / 255,
+                //     ((GLfloat)color_data[i * width * 3 + j * 3 + 1]) / 255,
+                //     ((GLfloat)color_data[i * width * 3 + j * 3 + 2]) / 255);
+                GLfloat x = (GLfloat)(j - width / 2) / height;
+                GLfloat y = -(GLfloat)(i - height / 2) / height;
+                GLfloat z = -(GLfloat)depth_data[i * width + j] / 5000;
+                z = 0;
+                glVertex3f(x, y, z);
+                glTexCoord2f((float)j / width, (float)i / height);
+
+                // std::cout
+                //     << "x = " << x << ", y = " << y << ", z = " << z << ", r
+                //     = "
+                //     << ((GLfloat)color_data[i * width * 3 + j * 3 + 0]) / 255
+                //     << ", g = "
+                //     << ((GLfloat)color_data[i * width * 3 + j * 3 + 1]) / 255
+                //     << ", b = "
+                //     << ((GLfloat)color_data[i * width * 3 + j * 3 + 2]) / 255
+                //     << std::endl;
+            }
+        }
+        glEnd();
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
         end = std::chrono::system_clock::now();
-        double time = static_cast<double>(
-            std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-                .count() /
-            1000.0);
-        printf("time %lf[ms]\n", time);
     }
 
+    glfwTerminate();
+
     return EXIT_SUCCESS;
-} catch (const rs2::error &e) {
-    std::cerr << "RealSense error calling " << e.get_failed_function() << "("
-              << e.get_failed_args() << "):\n    " << e.what() << std::endl;
-    return EXIT_FAILURE;
-} catch (const std::exception &e) {
-    std::cerr << e.what() << std::endl;
-    return EXIT_FAILURE;
 }

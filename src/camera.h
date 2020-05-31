@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <librealsense2/rs.hpp>
 
 #include "eyeLike.h"
@@ -13,6 +14,6 @@ struct rs2_frame_data {
 };
 
 int camera_main_loop(
-    ThreadSafeQueuePushViewer<eye_like::EyesPosition> &pos_queue,
-    ThreadSafeQueuePushViewer<rs2_frame_data> &frame_queue);
+    ThreadSafeState<eye_like::EyesPosition>::ThreadSafeStatePutViewer &eye_pos,
+    ThreadSafeQueue<rs2_frame_data>::ThreadSafeQueuePushViewer &frame_queue);
 } // namespace camera

@@ -18,8 +18,10 @@
 
 namespace camera {
 int camera_main_loop(
-    ThreadSafeQueuePushViewer<eye_like::EyesPosition> &eye_pos_queue,
-    ThreadSafeQueuePushViewer<rs2_frame_data> &frame_queue) try {
+    ThreadSafeState<eye_like::EyesPosition>::ThreadSafeStatePutViewer
+        &eye_pos_put,
+    ThreadSafeQueue<rs2_frame_data>::ThreadSafeQueuePushViewer
+        &frame_queue) try {
     eye_like::init();
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
@@ -50,7 +52,7 @@ int camera_main_loop(
             cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
             eye_like::detectAndDisplay(screen);
             eyes_position = eye_like::detect_eyes_position(screen);
-            eye_pos_queue.push(eyes_position);
+            eye_pos_put.put(eyes_position);
         }
 
         depth.keep();
@@ -70,14 +72,14 @@ int camera_main_loop(
         const double scale_y = scale_x / 9 * 16;
         eyex *= scale_x;
         eyey *= scale_y;
-        std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+        // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
 
         end = std::chrono::system_clock::now();
         double time = static_cast<double>(
             std::chrono::duration_cast<std::chrono::microseconds>(end - start)
                 .count() /
             1000.0);
-        std::cout << "time " << time << "[ms]" << std::endl;
+        // std::cout << "time " << time << "[ms]" << std::endl;
     }
 
     return EXIT_SUCCESS;

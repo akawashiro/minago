@@ -4,6 +4,8 @@
 
 namespace renderer {
 int renderer_main_loop(
-    ThreadSafeQueuePopViewer<eye_like::EyesPosition> &pos_queue,
-    ThreadSafeQueuePopViewer<camera::rs2_frame_data> &frame_queue);
+    ThreadSafeState<eye_like::EyesPosition>::ThreadSafeStateGetViewer 
+        &eye_pos_get,
+    ThreadSafeQueue<camera::rs2_frame_data>::ThreadSafeQueuePopViewer
+        &frame_queue);
 }

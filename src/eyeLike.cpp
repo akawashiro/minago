@@ -61,12 +61,12 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
     cv::Point rightPupil = findEyeCenter(faceROI, rightEyeRegion, "Right Eye");
 
     // TODO hard-coding
-    std::cout << "face.x = " << face.x << std::endl;
-    std::cout << "face.y = " << face.y << std::endl;
-    std::cout << "leftPupil.x + leftEyeRegion.x = "
-              << leftPupil.x + leftEyeRegion.x << std::endl;
-    std::cout << "rightPupil.x  + rightEyeRegion.x= "
-              << rightPupil.x + rightEyeRegion.x << std::endl;
+    // std::cout << "face.x = " << face.x << std::endl;
+    // std::cout << "face.y = " << face.y << std::endl;
+    // std::cout << "leftPupil.x + leftEyeRegion.x = "
+    //   << leftPupil.x + leftEyeRegion.x << std::endl;
+    // std::cout << "rightPupil.x  + rightEyeRegion.x= "
+    //   << rightPupil.x + rightEyeRegion.x << std::endl;
 
     eye_like::left_eye_center_x =
         (double)(leftPupil.x + leftEyeRegion.x + face.x) / (double)FRAME_WIDTH;
@@ -78,14 +78,14 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
     eye_like::right_eye_center_y =
         (double)(rightPupil.y + rightEyeRegion.y + face.y) /
         (double)FRAME_HEIGHT;
-    std::cout << "left_eye_center_x  = " << eye_like::left_eye_center_x
-              << std::endl;
-    std::cout << "left_eye_center_y  = " << eye_like::left_eye_center_y
-              << std::endl;
-    std::cout << "right_eye_center_x  = " << eye_like::right_eye_center_x
-              << std::endl;
-    std::cout << "right_eye_center_y  = " << eye_like::right_eye_center_y
-              << std::endl;
+    // std::cout << "left_eye_center_x  = " << eye_like::left_eye_center_x
+    //           << std::endl;
+    // std::cout << "left_eye_center_y  = " << eye_like::left_eye_center_y
+    //           << std::endl;
+    // std::cout << "right_eye_center_x  = " << eye_like::right_eye_center_x
+    //           << std::endl;
+    // std::cout << "right_eye_center_y  = " << eye_like::right_eye_center_y
+    //           << std::endl;
 
     // get corner regions
     cv::Rect leftRightCornerRegion(leftEyeRegion);
@@ -183,9 +183,9 @@ EyesPosition detect_eyes_position(cv::Mat frame) {
  * @function detectAndDisplay
  */
 void detectAndDisplay(cv::Mat frame) {
-    std::cout << "  dims: " << frame.dims
-              << ", depth(byte/channel):" << frame.elemSize1()
-              << ", channels: " << frame.channels() << std::endl;
+    // std::cout << "  dims: " << frame.dims
+    //   << ", depth(byte/channel):" << frame.elemSize1()
+    //   << ", channels: " << frame.channels() << std::endl;
 
     std::vector<cv::Rect> faces;
     // cv::Mat frame_gray;
@@ -194,9 +194,9 @@ void detectAndDisplay(cv::Mat frame) {
     cv::split(frame, rgbChannels);
     cv::Mat frame_gray = rgbChannels[2];
 
-    std::cout << "  dims: " << frame_gray.dims
-              << ", depth(byte/channel):" << frame_gray.elemSize1()
-              << ", channels: " << frame_gray.channels() << std::endl;
+    // std::cout << "  dims: " << frame_gray.dims
+    //   << ", depth(byte/channel):" << frame_gray.elemSize1()
+    //   << ", channels: " << frame_gray.channels() << std::endl;
 
     // cvtColor( frame, frame_gray, CV_BGR2GRAY );
     // equalizeHist( frame_gray, frame_gray );
@@ -302,7 +302,7 @@ int run_main(std::pair<int, int> resolution, bool enable_image) {
                                                                       start)
                     .count() /
                 1000.0);
-            printf("time %lf[ms]\n", time);
+            // printf("time %lf[ms]\n", time);
         }
     }
 

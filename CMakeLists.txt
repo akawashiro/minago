@@ -9,6 +9,7 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_BINARY_DIR ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -latomic")
 
 #Compile external dependencies
 add_subdirectory(external)
@@ -184,6 +185,7 @@ add_executable(minago
     src/findEyeCorner.cpp
     src/findEyeCorner.h 
     src/constants.h
+    src/connector.cpp
     src/helpers.cpp
     src/helpers.h
     src/thread_safe_queue.cpp
