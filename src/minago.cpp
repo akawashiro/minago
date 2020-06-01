@@ -6,7 +6,22 @@
 #include "renderer.h"
 
 int main() {
+    int use_realsense;
     int connection_type;
+
+    std::cout << "Realsense or webcam (1: realsense / 2: webcam) > ";
+    std::cin >> use_realsense;
+    if (use_realsense != 1 && use_realsense != 2) {
+        std::cout << "Invalid input: " << use_realsense << std::endl;
+        return 0;
+    } else {
+        if (use_realsense == 1) {
+            use_realsense = true;
+        } else {
+            use_realsense = false;
+        }
+    }
+
     std::cout << "Connection type (1: server / 2: client) > ";
     std::cin >> connection_type;
     if (connection_type != 1 && connection_type != 2) {
@@ -28,7 +43,7 @@ int main() {
     auto frame_connector_renderer_pop = frame_connector_renderer.getPopView();
 
     std::thread th_camera(camera::camera_main_loop, std::ref(eye_pos_put),
-                          std::ref(frame_camera_connector_push));
+                          std::ref(frame_camera_connector_push), use_realsense);
     std::thread th_renderer(renderer::renderer_main_loop, std::ref(eye_pos_get),
                             std::ref(frame_connector_renderer_pop));
     std::thread th_connector(connector::connector_main_loop,

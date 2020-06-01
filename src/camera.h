@@ -17,5 +17,6 @@ struct rs2_frame_data {
 
 int camera_main_loop(
     ThreadSafeState<eye_like::EyesPosition>::ThreadSafeStatePutViewer &eye_pos,
-    ThreadSafeQueue<rs2_frame_data>::ThreadSafeQueuePushViewer &frame_queue);
+    ThreadSafeQueue<rs2_frame_data>::ThreadSafeQueuePushViewer &frame_queue,
+    bool use_realsense);
 } // namespace camera
