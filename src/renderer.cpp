@@ -129,11 +129,8 @@ int renderer_main_loop(
         &eye_pos_get,
     ThreadSafeQueue<camera::rs2_frame_data>::ThreadSafeQueuePopViewer
         &frame_queue) {
-    std::string main_window_name = "Capture - Face detection";
-    std::string face_window_name = "Capture - Face";
-
     // Create a simple OpenGL window for rendering:
-    window app(1280, 720, "RealSense Pointcloud Example");
+    window app(1280, 720, "minago - 3d telecommunication software");
     // Construct an object to manage view state
     glfw_state app_state;
     // register callbacks to allow manipulation of the pointcloud
