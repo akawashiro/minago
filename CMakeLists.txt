@@ -5,6 +5,7 @@ project(3d-telecom)
 find_package(OpenGL REQUIRED) 
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(ZLIB)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_BINARY_DIR ${PROJECT_BINARY_DIR}/bin)
@@ -32,6 +33,7 @@ include_directories(
 set(ALL_LIBS 
 	${OPENGL_LIBRARY}
     ${OpenCV_LIBS}
+    ${ZLIB_LIBRARIES}
 	glfw 
 	GLEW_1130
     realsense2
@@ -123,9 +125,9 @@ add_custom_command(
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/video_capture_speed${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-# rs-pointcloud
-add_executable(rs-pointcloud
-    src/rs-pointcloud.cpp
+# rgbd-to-3d
+add_executable(rgbd-to-3d
+    src/rgbd-to-3d.cpp
     src/example.hpp
     src/eyeLike.cpp 
     src/eyeLike.h
@@ -137,13 +139,13 @@ add_executable(rs-pointcloud
     src/helpers.cpp
     src/helpers.h)
     
-target_link_libraries(rs-pointcloud ${ALL_LIBS})
-create_target_launcher(rs-pointcloud WORKING_DIRECTORY
+target_link_libraries(rgbd-to-3d ${ALL_LIBS})
+create_target_launcher(rgbd-to-3d WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 add_custom_command(
-     TARGET rs-pointcloud POST_BUILD
+     TARGET rgbd-to-3d POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy
-     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/rs-pointcloud${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/rgbd-to-3d${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 # camera
@@ -172,6 +174,31 @@ add_custom_command(
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/camera${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
+# point-cloud-compress 
+add_executable(point-cloud-compress
+    src/point-cloud-compress.cpp
+    src/example.hpp
+    src/eyeLike.cpp 
+    src/eyeLike.h
+    src/findEyeCenter.cpp 
+    src/findEyeCenter.h
+    src/findEyeCorner.cpp
+    src/findEyeCorner.h 
+    src/constants.h
+    src/helpers.cpp
+    src/helpers.h
+    src/thread_safe_queue.cpp
+    src/thread_safe_queue.h)
+    
+target_link_libraries(point-cloud-compress ${ALL_LIBS})
+create_target_launcher(point-cloud-compress WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET point-cloud-compress POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/point-cloud-compress${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
 # minago
 add_executable(minago
     src/minago.cpp
@@ -188,6 +215,7 @@ add_executable(minago
     src/connector.cpp
     src/helpers.cpp
     src/helpers.h
+    src/compress.cpp
     src/thread_safe_queue.cpp
     src/thread_safe_queue.h)
     
