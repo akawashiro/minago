@@ -50,9 +50,23 @@ void serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
            frame.n_points * sizeof(rs2::texture_coordinate));
 }
 
+cv::Mat r8u_old;
+cv::Mat g8u_old;
+cv::Mat b8u_old;
 cv::Mat x16u_old;
 cv::Mat y16u_old;
 cv::Mat z16u_old;
+cv::Mat u16u_old;
+cv::Mat v16u_old;
+
+cv::Mat r8ur_old;
+cv::Mat g8ur_old;
+cv::Mat b8ur_old;
+cv::Mat x16ur_old;
+cv::Mat y16ur_old;
+cv::Mat z16ur_old;
+cv::Mat u16ur_old;
+cv::Mat v16ur_old;
 
 uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     char *p = buf;
@@ -75,16 +89,42 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
 
     // RGB
     cv::Mat rgb_image(frame.height, frame.width, CV_8UC3, frame.rgb.get());
-    cv::Mat r8(rgb_image.rows, rgb_image.cols, CV_8UC1);
-    cv::Mat g8(rgb_image.rows, rgb_image.cols, CV_8UC1);
-    cv::Mat b8(rgb_image.rows, rgb_image.cols, CV_8UC1);
+    cv::Mat r8u(rgb_image.rows, rgb_image.cols, CV_8UC1);
+    cv::Mat g8u(rgb_image.rows, rgb_image.cols, CV_8UC1);
+    cv::Mat b8u(rgb_image.rows, rgb_image.cols, CV_8UC1);
 
-    cv::Mat out_rgb[] = {r8, g8, b8};
+    // Check the length of compressed rgb image
+    compress((char *)rgb_image.data,
+             frame.height * frame.width * sizeof(uint8_t) * 3, compress_output,
+             &compress_length);
+    std::cout << "The size of compressed rgb data = " << compress_length
+              << std::endl;
+
+    cv::Mat out_rgb[] = {r8u, g8u, b8u};
     int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
     mixChannels(&rgb_image, 1, out_rgb, 3, from_to_rgb, 3);
 
-    compress((char *)r8.data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
+    if (!r8u_old.empty()) {
+        cv::Mat rr = r8u - r8u_old;
+        if (!r8ur_old.empty()) {
+            cv::Mat rrr = rr - r8ur_old;
+            compress((char *)rrr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)rr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        r8ur_old = rr;
+    } else {
+        compress((char *)r8u.data, frame.height * frame.width * sizeof(uint8_t),
+                 compress_output, &compress_length);
+    }
+    r8u_old = r8u;
+
+    // compress((char *)r8.data, frame.height * frame.width * sizeof(uint8_t),
+    //          compress_output, &compress_length);
     std::cout << "red: original size = "
               << frame.height * frame.width * sizeof(uint8_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -93,8 +133,27 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    compress((char *)g8.data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
+    if (!g8u_old.empty()) {
+        cv::Mat gr = g8u - g8u_old;
+        if (!g8ur_old.empty()) {
+            cv::Mat grr = gr - g8ur_old;
+            compress((char *)grr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)gr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        r8ur_old = gr;
+    } else {
+        compress((char *)g8u.data, frame.height * frame.width * sizeof(uint8_t),
+                 compress_output, &compress_length);
+    }
+    g8u_old = g8u;
+
+    // compress((char *)g8u.data, frame.height * frame.width * sizeof(uint8_t),
+    //  compress_output, &compress_length);
     std::cout << "green: original size = "
               << frame.height * frame.width * sizeof(uint8_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -103,8 +162,27 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    compress((char *)b8.data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
+    if (!b8u_old.empty()) {
+        cv::Mat br = b8u - b8u_old;
+        if (!b8ur_old.empty()) {
+            cv::Mat brr = br - b8ur_old;
+            compress((char *)brr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)br.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        b8ur_old = br;
+    } else {
+        compress((char *)b8u.data, frame.height * frame.width * sizeof(uint8_t),
+                 compress_output, &compress_length);
+    }
+    b8u_old = b8u;
+
+    // compress((char *)b8u.data, frame.height * frame.width * sizeof(uint8_t),
+    //  compress_output, &compress_length);
     std::cout << "blue: original size = "
               << frame.height * frame.width * sizeof(uint8_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -129,6 +207,9 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     cv::minMaxLoc(x32f, &min_x, &max_x);
     cv::minMaxLoc(y32f, &min_y, &max_y);
     cv::minMaxLoc(z32f, &min_z, &max_z);
+    min_x = min_y = min_z = -50;
+    max_x = max_y = max_z = 50;
+
     x32f = x32f - min_x;
     y32f = y32f - min_y;
     z32f = z32f - min_z;
@@ -148,8 +229,17 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
         //     }
         //     std::cout << std::endl;
         // }
-        compress((char *)xr.data, frame.height * frame.width * sizeof(uint16_t),
-                 compress_output, &compress_length);
+        if (!x16ur_old.empty()) {
+            cv::Mat xrr = xr - x16ur_old;
+            compress((char *)xrr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)xr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        x16ur_old = xr;
     } else {
         compress((char *)x16u.data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
@@ -172,8 +262,29 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    compress((char *)y16u.data, frame.height * frame.width * sizeof(uint16_t),
-             compress_output, &compress_length);
+    if (!y16u_old.empty()) {
+        cv::Mat yr = y16u - y16u_old;
+        if (!y16ur_old.empty()) {
+            cv::Mat yrr = yr - y16ur_old;
+            compress((char *)yrr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)yr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        y16ur_old = yr;
+    } else {
+        compress((char *)y16u.data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+    }
+    y16u_old = y16u;
+
+    // compress((char *)y16u.data, frame.height * frame.width *
+    // sizeof(uint16_t),
+    //          compress_output, &compress_length);
     std::cout << "y: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -186,8 +297,29 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    compress((char *)z16u.data, frame.height * frame.width * sizeof(uint16_t),
-             compress_output, &compress_length);
+    if (!z16u_old.empty()) {
+        cv::Mat zr = z16u - z16u_old;
+        if (!z16ur_old.empty()) {
+            cv::Mat zrr = zr - z16ur_old;
+            compress((char *)zrr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)zr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        z16ur_old = zr;
+    } else {
+        compress((char *)z16u.data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+    }
+    z16u_old = z16u;
+
+    // compress((char *)z16u.data, frame.height * frame.width *
+    // sizeof(uint16_t),
+    //          compress_output, &compress_length);
     std::cout << "z: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -214,6 +346,9 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     double max_u, min_u, max_v, min_v;
     cv::minMaxLoc(u32f, &min_u, &max_u);
     cv::minMaxLoc(v32f, &min_v, &max_v);
+    min_u = min_v = -2;
+    max_u = max_v = 2;
+
     u32f = u32f - min_u;
     v32f = v32f - min_v;
 
@@ -222,8 +357,29 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     u32f.convertTo(u16u, CV_16UC3, 65535.0 / (max_u - min_u));
     v32f.convertTo(v16u, CV_16UC3, 65535.0 / (max_v - min_v));
 
-    compress((char *)u16u.data, frame.height * frame.width * sizeof(uint16_t),
-             compress_output, &compress_length);
+    if (!u16u_old.empty()) {
+        cv::Mat ur = u16u - u16u_old;
+        if (!u16ur_old.empty()) {
+            cv::Mat urr = ur - u16ur_old;
+            compress((char *)urr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)ur.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        u16ur_old = ur;
+    } else {
+        compress((char *)u16u.data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+    }
+    u16u_old = u16u;
+
+    // compress((char *)u16u.data, frame.height * frame.width *
+    // sizeof(uint16_t),
+    //  compress_output, &compress_length);
     std::cout << "u: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;
@@ -236,8 +392,29 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    compress((char *)v16u.data, frame.height * frame.width * sizeof(uint16_t),
-             compress_output, &compress_length);
+    if (!v16u_old.empty()) {
+        cv::Mat vr = v16u - v16u_old;
+        if (!v16ur_old.empty()) {
+            cv::Mat vrr = vr - v16ur_old;
+            compress((char *)vrr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        } else {
+            compress((char *)vr.data,
+                     frame.height * frame.width * sizeof(uint8_t),
+                     compress_output, &compress_length);
+        }
+        v16ur_old = vr;
+    } else {
+        compress((char *)v16u.data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+    }
+    v16u_old = v16u;
+
+    // compress((char *)v16u.data, frame.height * frame.width *
+    // sizeof(uint16_t),
+    //  compress_output, &compress_length);
     std::cout << "v: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;

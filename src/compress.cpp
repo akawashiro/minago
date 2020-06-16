@@ -15,7 +15,6 @@
 
 // You must allocate enough memory to *output.
 int compress(char *input, int input_length, char *output, int *output_length) {
-    std::cout << "compress start" << std::endl;
     int ret;
     z_stream strm;
 
@@ -38,7 +37,6 @@ int compress(char *input, int input_length, char *output, int *output_length) {
 
     /* clean up and return */
     (void)deflateEnd(&strm);
-    std::cout << "compress end" << std::endl;
     return Z_OK;
 }
 
