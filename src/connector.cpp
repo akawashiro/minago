@@ -4,9 +4,6 @@
 
 #include <arpa/inet.h>
 #include <cassert>
-#include <deque>
-#include <fstream>
-#include <iostream>
 #include <netinet/in.h>
 #include <poll.h>
 #include <stdio.h>
@@ -14,6 +11,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <deque>
+#include <fstream>
 #include <iostream>
 
 namespace connector {
@@ -52,8 +52,8 @@ void serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
            frame.n_points * sizeof(rs2::texture_coordinate));
 }
 
-const int MAX_HISTORY_LENGTH = 2;
-const double ABS_MAX_16SU = 10000.0;
+const int MAX_HISTORY_LENGTH = 3;
+const double ABS_MAX_16SU = (1 << 12) - 1;
 
 std::deque<std::shared_ptr<cv::Mat>> r8u_history;
 std::deque<std::shared_ptr<cv::Mat>> g8u_history;
@@ -73,8 +73,8 @@ void push_until_length(std::deque<T> &q, const T &v, int length) {
 
 std::shared_ptr<cv::Mat>
 residue_of_history(const std::deque<std::shared_ptr<cv::Mat>> &history,
-                   const std::shared_ptr<cv::Mat> &data) {
-    int n = history.size();
+                   const std::shared_ptr<cv::Mat> &data, int history_length) {
+    int n = std::min((size_t)history_length, history.size());
 
     if (n == 0) {
         return std::make_shared<cv::Mat>((*data).clone());
@@ -94,8 +94,8 @@ residue_of_history(const std::deque<std::shared_ptr<cv::Mat>> &history,
 
 std::shared_ptr<cv::Mat>
 restore_with_history(const std::deque<std::shared_ptr<cv::Mat>> &history,
-                     const std::shared_ptr<cv::Mat> &data) {
-    int n = history.size();
+                     const std::shared_ptr<cv::Mat> &data, int history_length) {
+    int n = std::min((size_t)history_length, history.size());
 
     if (n == 0) {
         return std::make_shared<cv::Mat>((*data).clone());
@@ -115,9 +115,10 @@ restore_with_history(const std::deque<std::shared_ptr<cv::Mat>> &history,
 
 void pixel_lost_check(const std::deque<std::shared_ptr<cv::Mat>> &history,
                       const std::shared_ptr<cv::Mat> &compressed,
-                      const std::shared_ptr<cv::Mat> &original, int line) {
+                      const std::shared_ptr<cv::Mat> &original,
+                      int history_length, int line) {
     std::shared_ptr<cv::Mat> restored =
-        restore_with_history(history, compressed);
+        restore_with_history(history, compressed, history_length);
     cv::Mat comp;
     cv::compare(*original, *restored, comp, cv::CMP_EQ);
     int n_lost = (*original).rows * (*original).cols - cv::countNonZero(comp);
@@ -125,6 +126,38 @@ void pixel_lost_check(const std::deque<std::shared_ptr<cv::Mat>> &history,
         std::cout << "line: " << line << ": " << n_lost << " pixels are lost."
                   << std::endl;
         assert(n_lost == 0);
+    }
+}
+
+std::shared_ptr<cv::Mat> proximity_compress(const cv::Mat &mat) {
+    auto ret = std::make_shared<cv::Mat>(mat.clone());
+    short *mat_p = (short *)mat.data;
+    short *ret_p = (short *)(*ret).data;
+
+    for (int i = 0; i < mat.rows; i++) {
+        for (int j = 0; j < mat.cols; j++) {
+            if (i == 0 && j == 0) {
+                ;
+            } else if (i == 0) {
+                ret_p[i * (int)mat.cols + j] =
+                    mat_p[i * mat.cols + j] - mat_p[i * mat.cols + j - 1];
+            } else {
+                ret_p[i * (int)mat.cols + j] =
+                    mat_p[i * mat.cols + j] - (mat_p[i * mat.cols + j - 1] +
+                                               mat_p[(i - 1) * mat.cols + j]) /
+                                                  2;
+            }
+        }
+    }
+    return ret;
+}
+
+void print_mat_u16(const cv::Mat &mat) {
+    for (int i = 0; i < mat.rows; i++) {
+        for (int j = 0; j < mat.cols; j++) {
+            std::cout << ((short *)mat.data)[i * mat.cols + j] << " ";
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -215,8 +248,8 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     cv::minMaxLoc(x32f, &min_x, &max_x);
     cv::minMaxLoc(y32f, &min_y, &max_y);
     cv::minMaxLoc(z32f, &min_z, &max_z);
-    min_x = min_y = min_z = -50;
-    max_x = max_y = max_z = 50;
+    // min_x = min_y = min_z = -50;
+    // max_x = max_y = max_z = 50;
 
     x32f = x32f - min_x;
     y32f = y32f - min_y;
@@ -228,18 +261,51 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
         std::make_shared<cv::Mat>(cv::Mat(y32f.rows, y32f.cols, CV_16SC1));
     std::shared_ptr<cv::Mat> z16u =
         std::make_shared<cv::Mat>(cv::Mat(z32f.rows, z32f.cols, CV_16SC1));
-    x32f.convertTo(*x16u, CV_16SC3, ABS_MAX_16SU / (max_x - min_x));
-    y32f.convertTo(*y16u, CV_16SC3, ABS_MAX_16SU / (max_y - min_y));
-    z32f.convertTo(*z16u, CV_16SC3, ABS_MAX_16SU / (max_z - min_z));
+    x32f.convertTo(*x16u, CV_16SC1, ABS_MAX_16SU / (max_x - min_x));
+    y32f.convertTo(*y16u, CV_16SC1, ABS_MAX_16SU / (max_y - min_y));
+    z32f.convertTo(*z16u, CV_16SC1, ABS_MAX_16SU / (max_z - min_z));
 
-    std::shared_ptr<cv::Mat> xr = residue_of_history(x16u_history, x16u);
-    pixel_lost_check(x16u_history, xr, x16u, __LINE__);
+    std::shared_ptr<cv::Mat> xr = residue_of_history(x16u_history, x16u, 0);
+    double xr_max, xr_min;
+    pixel_lost_check(x16u_history, xr, x16u, 0, __LINE__);
+    xr = proximity_compress(*xr);
+    cv::minMaxLoc(*xr, &xr_min, &xr_max);
 
     compress((char *)(*xr).data, frame.height * frame.width * sizeof(uint16_t),
              compress_output, &compress_length);
     std::cout << "x: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
+              << ", compressed size = " << compress_length
+              << ", xr_min = " << xr_min << ", xr_max = " << xr_max
+              << std::endl;
+    // print_mat_u16(*xr);
+
+    xr = residue_of_history(x16u_history, x16u, 1);
+    pixel_lost_check(x16u_history, xr, x16u, 1, __LINE__);
+    xr = proximity_compress(*xr);
+    cv::minMaxLoc(*xr, &xr_min, &xr_max);
+
+    compress((char *)(*xr).data, frame.height * frame.width * sizeof(uint16_t),
+             compress_output, &compress_length);
+    std::cout << "x history 1: original size = "
+              << frame.height * frame.width * sizeof(uint16_t)
+              << ", compressed size = " << compress_length
+              << ", xr_min = " << xr_min << ", xr_max = " << xr_max
+              << std::endl;
+    // print_mat_u16(*xr);
+
+    xr = residue_of_history(x16u_history, x16u, 2);
+    cv::minMaxLoc(*xr, &xr_min, &xr_max);
+    pixel_lost_check(x16u_history, xr, x16u, 2, __LINE__);
+
+    compress((char *)(*xr).data, frame.height * frame.width * sizeof(uint16_t),
+             compress_output, &compress_length);
+    std::cout << "x history 2: original size = "
+              << frame.height * frame.width * sizeof(uint16_t)
+              << ", compressed size = " << compress_length
+              << ", xr_min = " << xr_min << ", xr_max = " << xr_max
+              << std::endl;
+
     *((float *)p) = (float)((max_x - min_x) / ABS_MAX_16SU);
     p += sizeof(float);
     *((float *)p) = (float)min_x;
@@ -249,14 +315,46 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    std::shared_ptr<cv::Mat> yr = residue_of_history(y16u_history, y16u);
-    pixel_lost_check(y16u_history, yr, y16u, __LINE__);
+    std::shared_ptr<cv::Mat> yr = residue_of_history(y16u_history, y16u, 0);
+    pixel_lost_check(y16u_history, yr, y16u, 0, __LINE__);
+    double yr_max, yr_min;
+
+    yr = proximity_compress(*yr);
+    cv::minMaxLoc(*yr, &yr_min, &yr_max);
 
     compress((char *)(*yr).data, frame.height * frame.width * sizeof(uint16_t),
              compress_output, &compress_length);
     std::cout << "y: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
+              << ", compressed size = " << compress_length
+              << ", yr_min = " << yr_min << ", yr_max = " << yr_max
+              << std::endl;
+
+    yr = residue_of_history(y16u_history, y16u, 1);
+    pixel_lost_check(y16u_history, yr, y16u, 1, __LINE__);
+    cv::minMaxLoc(*yr, &yr_min, &yr_max);
+    yr = proximity_compress(*yr);
+
+    compress((char *)(*yr).data, frame.height * frame.width * sizeof(uint16_t),
+             compress_output, &compress_length);
+    std::cout << "y history 1: original size = "
+              << frame.height * frame.width * sizeof(uint16_t)
+              << ", compressed size = " << compress_length
+              << ", yr_min = " << yr_min << ", yr_max = " << yr_max
+              << std::endl;
+
+    yr = residue_of_history(y16u_history, y16u, 2);
+    cv::minMaxLoc(*yr, &yr_min, &yr_max);
+    pixel_lost_check(y16u_history, yr, y16u, 2, __LINE__);
+
+    compress((char *)(*yr).data, frame.height * frame.width * sizeof(uint16_t),
+             compress_output, &compress_length);
+    std::cout << "y history 2: original size = "
+              << frame.height * frame.width * sizeof(uint16_t)
+              << ", compressed size = " << compress_length
+              << ", yr_min = " << yr_min << ", yr_max = " << yr_max
+              << std::endl;
+
     *((float *)p) = (float)((max_y - min_y) / ABS_MAX_16SU);
     p += sizeof(float);
     *((float *)p) = (float)min_y;
@@ -266,8 +364,9 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    std::shared_ptr<cv::Mat> zr = residue_of_history(z16u_history, z16u);
-    pixel_lost_check(z16u_history, zr, z16u, __LINE__);
+    std::shared_ptr<cv::Mat> zr = residue_of_history(z16u_history, z16u, 0);
+    pixel_lost_check(z16u_history, zr, z16u, 0, __LINE__);
+    zr = proximity_compress(*zr);
 
     compress((char *)(*zr).data, frame.height * frame.width * sizeof(uint16_t),
              compress_output, &compress_length);
@@ -297,8 +396,8 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     double max_u, min_u, max_v, min_v;
     cv::minMaxLoc(u32f, &min_u, &max_u);
     cv::minMaxLoc(v32f, &min_v, &max_v);
-    min_u = min_v = -2;
-    max_u = max_v = 2;
+    // min_u = min_v = -2;
+    // max_u = max_v = 2;
 
     u32f = u32f - min_u;
     v32f = v32f - min_v;
@@ -307,11 +406,11 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
         std::make_shared<cv::Mat>(cv::Mat(u32f.rows, u32f.cols, CV_16SC1));
     std::shared_ptr<cv::Mat> v16u =
         std::make_shared<cv::Mat>(cv::Mat(v32f.rows, v32f.cols, CV_16SC1));
-    u32f.convertTo(*u16u, CV_16SC3, ABS_MAX_16SU / (max_u - min_u));
-    v32f.convertTo(*v16u, CV_16SC3, ABS_MAX_16SU / (max_v - min_v));
+    u32f.convertTo(*u16u, CV_16SC1, 1200 / (max_u - min_u));
+    v32f.convertTo(*v16u, CV_16SC1, 720 / (max_v - min_v));
 
-    std::shared_ptr<cv::Mat> ur = residue_of_history(u16u_history, u16u);
-    pixel_lost_check(u16u_history, ur, u16u, __LINE__);
+    std::shared_ptr<cv::Mat> ur = residue_of_history(u16u_history, u16u, 0);
+    pixel_lost_check(u16u_history, ur, u16u, 0, __LINE__);
 
     compress((char *)(*ur).data, frame.height * frame.width * sizeof(uint16_t),
              compress_output, &compress_length);
@@ -327,8 +426,8 @@ uint32_t serialize_frame_data_2(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    std::shared_ptr<cv::Mat> vr = residue_of_history(v16u_history, v16u);
-    pixel_lost_check(v16u_history, vr, v16u, __LINE__);
+    std::shared_ptr<cv::Mat> vr = residue_of_history(v16u_history, v16u, 0);
+    pixel_lost_check(v16u_history, vr, v16u, 0, __LINE__);
 
     compress((char *)(*vr).data, frame.height * frame.width * sizeof(uint16_t),
              compress_output, &compress_length);
