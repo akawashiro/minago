@@ -31,8 +31,8 @@ cv::RNG rng(12345);
 cv::Mat debugImage;
 cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
 
-int FRAME_WIDTH = 1280;
-int FRAME_HEIGHT = 720;
+int FRAME_WIDTH = 1280 / 2;
+int FRAME_HEIGHT = 720 / 2;
 
 /**
  * @function main

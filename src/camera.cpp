@@ -27,8 +27,17 @@ int camera_main_loop(
         // Declare RealSense pipeline, encapsulating the actual device and
         // sensors
         rs2::pipeline pipe;
-        // Start streaming with default recommended configuration
-        auto profile = pipe.start();
+
+        // Create a configuration for configuring the pipeline with a non
+        // default profile
+        rs2::config cfg;
+
+        // Add desired streams to configuration
+        cfg.enable_stream(RS2_STREAM_COLOR, 640, 360, RS2_FORMAT_BGR8, 30);
+        cfg.enable_stream(RS2_STREAM_DEPTH, 640, 360, RS2_FORMAT_Z16, 30);
+
+        // Instruct pipeline to start streaming with the requested configuration
+        auto profile = pipe.start(cfg);
 
         for (auto &&sensor : profile.get_device().query_sensors()) {
             sensor.set_option(RS2_OPTION_FRAMES_QUEUE_SIZE, 0);
@@ -44,13 +53,12 @@ int camera_main_loop(
             auto depth = frames.get_depth_frame();
             auto color = frames.get_color_frame();
 
-            cv::Mat opencv_color(cv::Size(1280, 720), CV_8UC3,
+            cv::Mat opencv_color(cv::Size(1280 / 2, 720 / 2), CV_8UC3,
                                  (void *)color.get_data(), cv::Mat::AUTO_STEP);
             cv::Mat screen;
             cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
             eye_like::EyesPosition eyes_position;
             if (!screen.empty()) {
-                cv::namedWindow("color", cv::WINDOW_AUTOSIZE);
                 eye_like::detectAndDisplay(screen);
                 eyes_position = eye_like::detect_eyes_position(screen);
                 eye_pos_put.put(eyes_position);
