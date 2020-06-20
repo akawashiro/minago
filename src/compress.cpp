@@ -58,7 +58,7 @@ int decompress(char *input, int input_length, char *output,
 
     strm.avail_in = input_length;
     strm.next_in = (Bytef *)input;
-    strm.avail_out = input_length;
+    strm.avail_out = *output_length;
     strm.next_out = (Bytef *)output;
 
     ret = inflate(&strm, Z_NO_FLUSH);
@@ -72,7 +72,7 @@ int decompress(char *input, int input_length, char *output,
         return ret;
     }
 
-    *output_length = input_length - strm.avail_out;
+    *output_length = *output_length - strm.avail_out;
 
     /* clean up and return */
     (void)inflateEnd(&strm);
