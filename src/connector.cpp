@@ -207,7 +207,7 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     std::cout << "u: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;
-    *((float *)p) = (float)((max_u - min_u) / ABS_MAX_16SU);
+    *((float *)p) = (float)((max_u - min_u) / frame.width);
     p += sizeof(float);
     *((float *)p) = (float)min_u;
     p += sizeof(float);
@@ -222,7 +222,7 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     std::cout << "v: original size = "
               << frame.height * frame.width * sizeof(uint16_t)
               << ", compressed size = " << compress_length << std::endl;
-    *((float *)p) = (float)((max_v - min_v) / ABS_MAX_16SU);
+    *((float *)p) = (float)((max_v - min_v) / frame.height);
     p += sizeof(float);
     *((float *)p) = (float)min_v;
     p += sizeof(float);
