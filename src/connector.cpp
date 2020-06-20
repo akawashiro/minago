@@ -243,6 +243,10 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
     camera::rs2_frame_data frame;
     char *p = buf;
 
+    char *compress_output =
+        (char *)malloc(frame.n_points * sizeof(rs2::vertex));
+    int compress_length;
+
     // Skip the first 4 bytes of the length of the serialized data.
     p += sizeof(uint32_t);
 
@@ -255,24 +259,176 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
     frame.n_points = *((uint32_t *)p);
     p += sizeof(uint32_t);
 
+    // Extract RGB information
+    // These memories are directly used as cv::Mat buffer.
+    {
+        char *r8u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
+        char *g8u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
+        char *b8u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
+
+        int r_comp_length = *((uint32_t *)p);
+        int r_decomp_length = frame.width * frame.height * sizeof(uint8_t);
+        p += sizeof(uint32_t);
+        decompress(p, r_comp_length, r8u_buf, &r_decomp_length);
+        p += r_comp_length;
+        std::cout << "r_comp_length = " << r_comp_length
+                  << ", r_decomp_length = " << r_decomp_length << std::endl;
+
+        int g_comp_length = *((uint32_t *)p);
+        int g_decomp_length = frame.width * frame.height * sizeof(uint8_t);
+        p += sizeof(uint32_t);
+        decompress(p, g_comp_length, g8u_buf, &g_decomp_length);
+        p += g_comp_length;
+        std::cout << "g_comp_length = " << g_comp_length
+                  << ", g_decomp_length = " << g_decomp_length << std::endl;
+
+        int b_comp_length = *((uint32_t *)p);
+        int b_decomp_length = frame.width * frame.height * sizeof(uint8_t);
+        p += sizeof(uint32_t);
+        decompress(p, b_comp_length, b8u_buf, &b_decomp_length);
+        p += b_comp_length;
+        std::cout << "b_comp_length = " << b_comp_length
+                  << ", b_decomp_length = " << b_decomp_length << std::endl;
+
+        cv::Mat r8u(frame.height, frame.width, CV_8UC1, r8u_buf);
+        cv::Mat g8u(frame.height, frame.width, CV_8UC1, g8u_buf);
+        cv::Mat b8u(frame.height, frame.width, CV_8UC1, b8u_buf);
+        cv::Mat rgb_image(frame.height, frame.width, CV_8UC3);
+
+        cv::Mat in_rgb[] = {r8u, g8u, b8u};
+        int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
+        mixChannels(in_rgb, 3, &rgb_image, 1, from_to_rgb, 3);
+
     std::shared_ptr<uint8_t[]> rgb_tmp(
         new uint8_t[3 * frame.width * frame.height]);
     frame.rgb = rgb_tmp;
-    memcpy(frame.rgb.get(), p,
+        memcpy(frame.rgb.get(), rgb_image.data,
            sizeof(uint8_t) * 3 * frame.width * frame.height);
-    p += sizeof(uint8_t) * 3 * frame.width * frame.height;
+    }
+
+    // XYZ
+    {
+        char *x16u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint16_t));
+        char *y16u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint16_t));
+        char *z16u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint16_t));
+
+        float x_magnification = *((float *)p);
+        p += sizeof(float);
+        float x_bias = *((float *)p);
+        p += sizeof(float);
+        uint32_t x_comp_length = *((uint32_t *)p);
+        p += sizeof(uint32_t);
+        int x_decomp_length = frame.width * frame.height * sizeof(uint16_t);
+        decompress(p, x_comp_length, x16u_buf, &x_decomp_length);
+        p += x_comp_length;
+        std::cout << "x_comp_length = " << x_comp_length
+                  << ", x_decomp_length = " << x_decomp_length << std::endl;
+
+        float y_magnification = *((float *)p);
+        p += sizeof(float);
+        float y_bias = *((float *)p);
+        p += sizeof(float);
+        uint32_t y_comp_length = *((uint32_t *)p);
+        p += sizeof(uint32_t);
+        int y_decomp_length = frame.width * frame.height * sizeof(uint16_t);
+        decompress(p, y_comp_length, y16u_buf, &y_decomp_length);
+        p += y_comp_length;
+        std::cout << "y_comp_length = " << y_comp_length
+                  << ", y_decomp_length = " << y_decomp_length << std::endl;
+
+        float z_magnification = *((float *)p);
+        p += sizeof(float);
+        float z_bias = *((float *)p);
+        p += sizeof(float);
+        uint32_t z_comp_length = *((uint32_t *)p);
+        p += sizeof(uint32_t);
+        int z_decomp_length = frame.width * frame.height * sizeof(uint16_t);
+        decompress(p, z_comp_length, z16u_buf, &z_decomp_length);
+        p += z_comp_length;
+        std::cout << "z_comp_length = " << z_comp_length
+                  << ", z_decomp_length = " << z_decomp_length << std::endl;
+
+        cv::Mat x16u(frame.height, frame.width, CV_16SC1, x16u_buf);
+        cv::Mat y16u(frame.height, frame.width, CV_16SC1, y16u_buf);
+        cv::Mat z16u(frame.height, frame.width, CV_16SC1, z16u_buf);
+
+        cv::Mat x32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat y32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat z32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat xyz_image(frame.height, frame.width, CV_32FC3);
+
+        x16u.convertTo(x32f, CV_32FC1, x_magnification, x_bias);
+        y16u.convertTo(y32f, CV_32FC1, y_magnification, y_bias);
+        z16u.convertTo(z32f, CV_32FC1, z_magnification, z_bias);
+
+        cv::Mat in_xyz[] = {x32f, y32f, z32f};
+        int from_to_xyz[] = {0, 0, 1, 1, 2, 2};
+        mixChannels(in_xyz, 3, &xyz_image, 1, from_to_xyz, 3);
 
     std::shared_ptr<rs2::vertex[]> vertices_tmp(
         new rs2::vertex[frame.n_points]);
     frame.vertices = vertices_tmp;
-    memcpy(frame.vertices.get(), p, sizeof(rs2::vertex) * frame.n_points);
-    p += sizeof(rs2::vertex) * frame.n_points;
+        memcpy(frame.vertices.get(), xyz_image.data,
+               sizeof(rs2::vertex) * frame.n_points);
+    }
+
+    // UV
+    {
+        char *u16u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint16_t));
+        char *v16u_buf =
+            (char *)malloc(frame.width * frame.height * sizeof(uint16_t));
+
+        float u_magnification = *((float *)p);
+        p += sizeof(float);
+        float u_bias = *((float *)p);
+        p += sizeof(float);
+        uint32_t u_comp_length = *((uint32_t *)p);
+        p += sizeof(uint32_t);
+        int u_decomp_length = frame.width * frame.height * sizeof(uint16_t);
+        decompress(p, u_comp_length, u16u_buf, &u_decomp_length);
+        p += u_comp_length;
+        std::cout << "u_comp_length = " << u_comp_length
+                  << ", u_decomp_length = " << u_decomp_length << std::endl;
+
+        float v_magnification = *((float *)p);
+        p += sizeof(float);
+        float v_bias = *((float *)p);
+        p += sizeof(float);
+        uint32_t v_comp_length = *((uint32_t *)p);
+        p += sizeof(uint32_t);
+        int v_decomp_length = frame.width * frame.height * sizeof(uint16_t);
+        decompress(p, v_comp_length, v16u_buf, &v_decomp_length);
+        p += v_comp_length;
+        std::cout << "v_comp_length = " << v_comp_length
+                  << ", v_decomp_length = " << v_decomp_length << std::endl;
+
+        cv::Mat u16u(frame.height, frame.width, CV_16SC1, u16u_buf);
+        cv::Mat v16u(frame.height, frame.width, CV_16SC1, v16u_buf);
+
+        cv::Mat u32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat v32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat uv_image(frame.height, frame.width, CV_32FC2);
+
+        u16u.convertTo(u32f, CV_32FC1, u_magnification, u_bias);
+        v16u.convertTo(v32f, CV_32FC1, v_magnification, v_bias);
+
+        cv::Mat in_uv[] = {u32f, v32f};
+        int from_to_uv[] = {0, 0, 1, 1};
+        mixChannels(in_uv, 3, &uv_image, 1, from_to_uv, 3);
 
     std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
         new rs2::texture_coordinate[frame.n_points]);
     frame.texture_coordinates = texture_coordinates_tmp;
-    memcpy(frame.texture_coordinates.get(), p,
+        memcpy(frame.texture_coordinates.get(), uv_image.data,
            sizeof(rs2::texture_coordinate) * frame.n_points);
+    }
 
     return frame;
 }
