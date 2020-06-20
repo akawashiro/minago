@@ -295,7 +295,9 @@ int connector_main_loop(
     while (1) {
         poll(&fd, 1, 1);
         if (fd.revents & POLLIN) {
-            int len_read;
+            int len_read = 0;
+            // If socket == -1 then debug mode.
+            if (socket != -1)
             len_read = read(socket, buf + n_accumlated_read, BUF_LEN);
             std::cout << "len_read = " << len_read << std::endl;
             n_accumlated_read += len_read;
@@ -329,6 +331,7 @@ int connector_main_loop(
                       << std::endl;
 
             serialize_frame_data(*f, buf);
+            if (socket != -1) {
             int len_send = send(socket, buf, len, 0);
             std::cout << "len_send = " << len_send << std::endl;
         }
