@@ -33,8 +33,10 @@ int camera_main_loop(
         rs2::config cfg;
 
         // Add desired streams to configuration
-        cfg.enable_stream(RS2_STREAM_COLOR, 640, 360, RS2_FORMAT_BGR8, 30);
-        cfg.enable_stream(RS2_STREAM_DEPTH, 640, 360, RS2_FORMAT_Z16, 30);
+        cfg.enable_stream(RS2_STREAM_COLOR, FRAME_WIDTH, FRAME_HEIGHT,
+                          RS2_FORMAT_BGR8, FPS);
+        cfg.enable_stream(RS2_STREAM_DEPTH, FRAME_WIDTH, FRAME_HEIGHT,
+                          RS2_FORMAT_Z16, FPS);
 
         // Instruct pipeline to start streaming with the requested configuration
         auto profile = pipe.start(cfg);
@@ -53,7 +55,7 @@ int camera_main_loop(
             auto depth = frames.get_depth_frame();
             auto color = frames.get_color_frame();
 
-            cv::Mat opencv_color(cv::Size(1280 / 2, 720 / 2), CV_8UC3,
+            cv::Mat opencv_color(cv::Size(FRAME_WIDTH, FRAME_WIDTH), CV_8UC3,
                                  (void *)color.get_data(), cv::Mat::AUTO_STEP);
             cv::Mat screen;
             cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
@@ -107,8 +109,8 @@ int camera_main_loop(
             std::cout << "Cannot connect to webcam." << std::endl;
             return 0;
         }
-        capture.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
-        capture.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+        capture.set(cv::CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+        capture.set(cv::CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
         while (1) {
             capture.read(frame);
             cv::flip(frame, frame, 1);

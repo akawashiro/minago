@@ -8,6 +8,10 @@
 
 namespace camera {
 
+const int FPS = 15;
+const int FRAME_WIDTH = 640;
+const int FRAME_HEIGHT = 360;
+
 struct rs2_frame_data {
     uint32_t height, width, n_points;
     std::shared_ptr<uint8_t[]> rgb;
