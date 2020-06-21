@@ -55,7 +55,7 @@ int camera_main_loop(
             auto depth = frames.get_depth_frame();
             auto color = frames.get_color_frame();
 
-            cv::Mat opencv_color(cv::Size(FRAME_WIDTH, FRAME_WIDTH), CV_8UC3,
+            cv::Mat opencv_color(cv::Size(FRAME_WIDTH, FRAME_HEIGHT), CV_8UC3,
                                  (void *)color.get_data(), cv::Mat::AUTO_STEP);
             cv::Mat screen;
             cv::cvtColor(opencv_color, screen, cv::COLOR_RGB2BGR);
