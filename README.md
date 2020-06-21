@@ -9,6 +9,12 @@ You can find more precise description in Dockerfile.
 % ./launch-minago.sh  
 ```
 
+# For contributors
+Please check your patches are built successfully by the following command.
+```
+sudo docker build -t minago .
+```
+
 # TODO
 - なんとかしてリアルタイム3Dモデル生成をする
 - z方向の位置も計算する  
