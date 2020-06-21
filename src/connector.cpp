@@ -70,7 +70,6 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
     mixChannels(&rgb_image, 1, out_rgb, 3, from_to_rgb, 3);
 
-    // std::shared_ptr<cv::Mat> rr = residue_of_history(r8u_history, r8u);
     compress((char *)(*r8u).data, frame.height * frame.width * sizeof(uint8_t),
              compress_output, &compress_length);
     std::cout << "red: original size = "
@@ -81,7 +80,6 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    // std::shared_ptr<cv::Mat> gr = residue_of_history(g8u_history, g8u);
     compress((char *)(*g8u).data, frame.height * frame.width * sizeof(uint8_t),
              compress_output, &compress_length);
     std::cout << "green: original size = "
@@ -92,7 +90,6 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     memcpy(p, compress_output, compress_length);
     p += compress_length;
 
-    // std::shared_ptr<cv::Mat> br = residue_of_history(b8u_history, b8u);
     compress((char *)(*b8u).data, frame.height * frame.width * sizeof(uint8_t),
              compress_output, &compress_length);
     std::cout << "blue: original size = "
@@ -119,8 +116,6 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     cv::minMaxLoc(x32f, &min_x, &max_x);
     cv::minMaxLoc(y32f, &min_y, &max_y);
     cv::minMaxLoc(z32f, &min_z, &max_z);
-    // min_x = min_y = min_z = -50;
-    // max_x = max_y = max_z = 50;
 
     x32f = x32f - min_x;
     y32f = y32f - min_y;
@@ -197,8 +192,6 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     double max_u, min_u, max_v, min_v;
     cv::minMaxLoc(u32f, &min_u, &max_u);
     cv::minMaxLoc(v32f, &min_v, &max_v);
-    // min_u = min_v = -2;
-    // max_u = max_v = 2;
 
     u32f = u32f - min_u;
     v32f = v32f - min_v;
@@ -311,11 +304,11 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
         mixChannels(in_rgb, 3, &rgb_image, 1, from_to_rgb, 3);
 
-    std::shared_ptr<uint8_t[]> rgb_tmp(
-        new uint8_t[3 * frame.width * frame.height]);
-    frame.rgb = rgb_tmp;
+        std::shared_ptr<uint8_t[]> rgb_tmp(
+            new uint8_t[3 * frame.width * frame.height]);
+        frame.rgb = rgb_tmp;
         memcpy(frame.rgb.get(), rgb_image.data,
-           sizeof(uint8_t) * 3 * frame.width * frame.height);
+               sizeof(uint8_t) * 3 * frame.width * frame.height);
     }
 
     // XYZ
@@ -380,9 +373,9 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int from_to_xyz[] = {0, 0, 1, 1, 2, 2};
         mixChannels(in_xyz, 3, &xyz_image, 1, from_to_xyz, 3);
 
-    std::shared_ptr<rs2::vertex[]> vertices_tmp(
-        new rs2::vertex[frame.n_points]);
-    frame.vertices = vertices_tmp;
+        std::shared_ptr<rs2::vertex[]> vertices_tmp(
+            new rs2::vertex[frame.n_points]);
+        frame.vertices = vertices_tmp;
         memcpy(frame.vertices.get(), xyz_image.data,
                sizeof(rs2::vertex) * frame.n_points);
     }
@@ -432,11 +425,11 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int from_to_uv[] = {0, 0, 1, 1};
         mixChannels(in_uv, 3, &uv_image, 1, from_to_uv, 3);
 
-    std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
-        new rs2::texture_coordinate[frame.n_points]);
-    frame.texture_coordinates = texture_coordinates_tmp;
+        std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
+            new rs2::texture_coordinate[frame.n_points]);
+        frame.texture_coordinates = texture_coordinates_tmp;
         memcpy(frame.texture_coordinates.get(), uv_image.data,
-           sizeof(rs2::texture_coordinate) * frame.n_points);
+               sizeof(rs2::texture_coordinate) * frame.n_points);
     }
 
     return frame;
@@ -490,9 +483,9 @@ int connector_main_loop(
                 std::cout << "predicted bps = "
                           << frame_data_length * camera::FPS * 8 / 1024.0 /
                                  1024.0
-                      << std::endl;
+                          << std::endl;
 
-            if (socket != -1) {
+                if (socket != -1) {
                     int len_send = send(socket, snd_buf, frame_data_length, 0);
                     std::cout << "len_send = " << frame_data_length
                               << std::endl;
