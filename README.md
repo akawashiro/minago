@@ -1,4 +1,5 @@
 # How to run
+You can find more precise description in Dockerfile.
 ```bash
 % git clone https://github.com/akawashiro/minago.git  
 % mkdir build  
