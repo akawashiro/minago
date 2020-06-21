@@ -2,6 +2,8 @@
 
 #include "compress.h"
 
+#include <opencv2/core/core.hpp>
+
 #include <arpa/inet.h>
 #include <cassert>
 #include <netinet/in.h>
@@ -58,47 +60,17 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     int compress_length;
 
     // RGB
-    cv::Mat rgb_image(frame.height, frame.width, CV_8UC3, frame.rgb.get());
-    std::shared_ptr<cv::Mat> r8u = std::make_shared<cv::Mat>(
-        cv::Mat(rgb_image.rows, rgb_image.cols, CV_8UC1));
-    std::shared_ptr<cv::Mat> g8u = std::make_shared<cv::Mat>(
-        cv::Mat(rgb_image.rows, rgb_image.cols, CV_8UC1));
-    std::shared_ptr<cv::Mat> b8u = std::make_shared<cv::Mat>(
-        cv::Mat(rgb_image.rows, rgb_image.cols, CV_8UC1));
+    {
+        cv::Mat rgb_image(frame.height, frame.width, CV_8UC3, frame.rgb.get());
 
-    cv::Mat out_rgb[] = {*r8u, *g8u, *b8u};
-    int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
-    mixChannels(&rgb_image, 1, out_rgb, 3, from_to_rgb, 3);
-
-    compress((char *)(*r8u).data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
-    std::cout << "red: original size = "
-              << frame.height * frame.width * sizeof(uint8_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
-
-    compress((char *)(*g8u).data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
-    std::cout << "green: original size = "
-              << frame.height * frame.width * sizeof(uint8_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
-
-    compress((char *)(*b8u).data, frame.height * frame.width * sizeof(uint8_t),
-             compress_output, &compress_length);
-    std::cout << "blue: original size = "
-              << frame.height * frame.width * sizeof(uint8_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        std::vector<uchar> jpeg_buf;
+        cv::imencode(".jpg", rgb_image, jpeg_buf);
+        std::cout << "The size of jpeg_buf = " << jpeg_buf.size() << std::endl;
+        *((uint32_t *)p) = jpeg_buf.size();
+        p += sizeof(uint32_t);
+        memcpy(p, jpeg_buf.data(), jpeg_buf.size());
+        p += jpeg_buf.size();
+    }
 
     // XYZ
     {
@@ -268,45 +240,13 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
     // Extract RGB information
     // These memories are directly used as cv::Mat buffer.
     {
-        char *r8u_buf =
-            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
-        char *g8u_buf =
-            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
-        char *b8u_buf =
-            (char *)malloc(frame.width * frame.height * sizeof(uint8_t));
-
-        int r_comp_length = *((uint32_t *)p);
-        int r_decomp_length = frame.width * frame.height * sizeof(uint8_t);
+        uint32_t jpeg_size = *((uint32_t *)p);
         p += sizeof(uint32_t);
-        decompress(p, r_comp_length, r8u_buf, &r_decomp_length);
-        p += r_comp_length;
-        std::cout << "r_comp_length = " << r_comp_length
-                  << ", r_decomp_length = " << r_decomp_length << std::endl;
+        std::vector<uchar> jpeg_buf(jpeg_size);
+        memcpy(jpeg_buf.data(), p, jpeg_size);
+        p += jpeg_size;
 
-        int g_comp_length = *((uint32_t *)p);
-        int g_decomp_length = frame.width * frame.height * sizeof(uint8_t);
-        p += sizeof(uint32_t);
-        decompress(p, g_comp_length, g8u_buf, &g_decomp_length);
-        p += g_comp_length;
-        std::cout << "g_comp_length = " << g_comp_length
-                  << ", g_decomp_length = " << g_decomp_length << std::endl;
-
-        int b_comp_length = *((uint32_t *)p);
-        int b_decomp_length = frame.width * frame.height * sizeof(uint8_t);
-        p += sizeof(uint32_t);
-        decompress(p, b_comp_length, b8u_buf, &b_decomp_length);
-        p += b_comp_length;
-        std::cout << "b_comp_length = " << b_comp_length
-                  << ", b_decomp_length = " << b_decomp_length << std::endl;
-
-        cv::Mat r8u(frame.height, frame.width, CV_8UC1, r8u_buf);
-        cv::Mat g8u(frame.height, frame.width, CV_8UC1, g8u_buf);
-        cv::Mat b8u(frame.height, frame.width, CV_8UC1, b8u_buf);
-        cv::Mat rgb_image(frame.height, frame.width, CV_8UC3);
-
-        cv::Mat in_rgb[] = {r8u, g8u, b8u};
-        int from_to_rgb[] = {0, 0, 1, 1, 2, 2};
-        mixChannels(in_rgb, 3, &rgb_image, 1, from_to_rgb, 3);
+        cv::Mat rgb_image = cv::imdecode(jpeg_buf, cv::IMREAD_COLOR);
 
         std::shared_ptr<uint8_t[]> rgb_tmp(
             new uint8_t[3 * frame.width * frame.height]);
