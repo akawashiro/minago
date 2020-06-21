@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <stdio.h>
@@ -16,32 +17,51 @@
 #define PORT 8080
 
 int setup_client() {
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
+    int sock = 0, valread, rc;
+    struct in6_addr serv_addr;
+    struct addrinfo hints, *res = NULL;
     char *hello = "Hello from client";
     char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    memset(&hints, 0x00, sizeof(hints));
+    hints.ai_flags = AI_NUMERICSERV;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
     std::string server_address;
     std::cout << "Server address: ";
     std::cin >> server_address;
 
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET6, server_address.c_str(), &serv_addr) <= 0) {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
+    hints.ai_family = AF_INET6;
+    hints.ai_flags |= AI_NUMERICHOST;
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        printf("\nConnection Failed \n");
-        return -1;
+    rc = getaddrinfo(server_address.c_str(), "8080", &hints, &res);
+    if (rc != 0) {
+        printf("Host not found --> %s\n", gai_strerror(rc));
+        if (rc == EAI_SYSTEM)
+            perror("getaddrinfo() failed");
     }
+
+    sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sock < 0) {
+        perror("socket() failed");
+    }
+
+    rc = connect(sock, res->ai_addr, res->ai_addrlen);
+    if (rc < 0) {
+        /*****************************************************************/
+        /* Note: the res is a linked list of addresses found for server. */
+        /* If the connect() fails to the first one, subsequent addresses */
+        /* (if any) in the list can be tried if required.               */
+        /*****************************************************************/
+        perror("connect() failed");
+    }
+
     send(sock, hello, strlen(hello), 0);
     printf("Hello message sent\n");
     valread = read(sock, buffer, 1024);
@@ -51,7 +71,7 @@ int setup_client() {
 
 int setup_server() {
     int server_fd, new_socket, valread;
-    struct sockaddr_in address;
+    struct sockaddr_in6 address;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
@@ -61,7 +81,7 @@ int setup_server() {
     memset(&fd, 0, sizeof(fd));
 
     // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
@@ -72,9 +92,9 @@ int setup_server() {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin6_family = AF_INET6;
+    address.sin6_addr = in6addr_any;
+    address.sin6_port = htons(PORT);
 
     // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
