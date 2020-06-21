@@ -101,137 +101,141 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
     p += compress_length;
 
     // XYZ
-    cv::Mat xyz_image(frame.height, frame.width, CV_32FC3,
-                      frame.vertices.get());
-    cv::Mat x32f(rgb_image.rows, rgb_image.cols, CV_32FC1);
-    cv::Mat y32f(rgb_image.rows, rgb_image.cols, CV_32FC1);
-    cv::Mat z32f(rgb_image.rows, rgb_image.cols, CV_32FC1);
+    {
+        cv::Mat xyz_image(frame.height, frame.width, CV_32FC3,
+                          frame.vertices.get());
+        cv::Mat x32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat y32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat z32f(frame.height, frame.width, CV_32FC1);
 
-    cv::Mat out_xyz[] = {x32f, y32f, z32f};
-    int from_to_xyz[] = {0, 0, 1, 1, 2, 2};
-    mixChannels(&xyz_image, 1, out_xyz, 3, from_to_xyz, 3);
+        cv::Mat out_xyz[] = {x32f, y32f, z32f};
+        int from_to_xyz[] = {0, 0, 1, 1, 2, 2};
+        mixChannels(&xyz_image, 1, out_xyz, 3, from_to_xyz, 3);
 
-    // Normalization
-    double max_x, min_x, max_y, min_y, max_z, min_z;
-    cv::minMaxLoc(x32f, &min_x, &max_x);
-    cv::minMaxLoc(y32f, &min_y, &max_y);
-    cv::minMaxLoc(z32f, &min_z, &max_z);
+        // Normalization
+        double max_x, min_x, max_y, min_y, max_z, min_z;
+        cv::minMaxLoc(x32f, &min_x, &max_x);
+        cv::minMaxLoc(y32f, &min_y, &max_y);
+        cv::minMaxLoc(z32f, &min_z, &max_z);
 
-    x32f = x32f - min_x;
-    y32f = y32f - min_y;
-    z32f = z32f - min_z;
+        x32f = x32f - min_x;
+        y32f = y32f - min_y;
+        z32f = z32f - min_z;
 
-    std::shared_ptr<cv::Mat> x16u =
-        std::make_shared<cv::Mat>(cv::Mat(x32f.rows, x32f.cols, CV_16SC1));
-    std::shared_ptr<cv::Mat> y16u =
-        std::make_shared<cv::Mat>(cv::Mat(y32f.rows, y32f.cols, CV_16SC1));
-    std::shared_ptr<cv::Mat> z16u =
-        std::make_shared<cv::Mat>(cv::Mat(z32f.rows, z32f.cols, CV_16SC1));
-    x32f.convertTo(*x16u, CV_16SC1, ABS_MAX_16SU / (max_x - min_x));
-    y32f.convertTo(*y16u, CV_16SC1, ABS_MAX_16SU / (max_y - min_y));
-    z32f.convertTo(*z16u, CV_16SC1, ABS_MAX_16SU / (max_z - min_z));
+        std::shared_ptr<cv::Mat> x16u =
+            std::make_shared<cv::Mat>(cv::Mat(x32f.rows, x32f.cols, CV_16SC1));
+        std::shared_ptr<cv::Mat> y16u =
+            std::make_shared<cv::Mat>(cv::Mat(y32f.rows, y32f.cols, CV_16SC1));
+        std::shared_ptr<cv::Mat> z16u =
+            std::make_shared<cv::Mat>(cv::Mat(z32f.rows, z32f.cols, CV_16SC1));
+        x32f.convertTo(*x16u, CV_16SC1, ABS_MAX_16SU / (max_x - min_x));
+        y32f.convertTo(*y16u, CV_16SC1, ABS_MAX_16SU / (max_y - min_y));
+        z32f.convertTo(*z16u, CV_16SC1, ABS_MAX_16SU / (max_z - min_z));
 
-    compress((char *)(*x16u).data,
-             frame.height * frame.width * sizeof(uint16_t), compress_output,
-             &compress_length);
-    std::cout << "x: original size = "
-              << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
+        compress((char *)(*x16u).data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+        std::cout << "x: original size = "
+                  << frame.height * frame.width * sizeof(uint16_t)
+                  << ", compressed size = " << compress_length << std::endl;
 
-    *((float *)p) = (float)((max_x - min_x) / ABS_MAX_16SU);
-    p += sizeof(float);
-    *((float *)p) = (float)min_x;
-    p += sizeof(float);
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        *((float *)p) = (float)((max_x - min_x) / ABS_MAX_16SU);
+        p += sizeof(float);
+        *((float *)p) = (float)min_x;
+        p += sizeof(float);
+        *((uint32_t *)p) = compress_length;
+        p += sizeof(uint32_t);
+        memcpy(p, compress_output, compress_length);
+        p += compress_length;
 
-    compress((char *)(*y16u).data,
-             frame.height * frame.width * sizeof(uint16_t), compress_output,
-             &compress_length);
-    std::cout << "y: original size = "
-              << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
+        compress((char *)(*y16u).data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+        std::cout << "y: original size = "
+                  << frame.height * frame.width * sizeof(uint16_t)
+                  << ", compressed size = " << compress_length << std::endl;
 
-    *((float *)p) = (float)((max_y - min_y) / ABS_MAX_16SU);
-    p += sizeof(float);
-    *((float *)p) = (float)min_y;
-    p += sizeof(float);
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        *((float *)p) = (float)((max_y - min_y) / ABS_MAX_16SU);
+        p += sizeof(float);
+        *((float *)p) = (float)min_y;
+        p += sizeof(float);
+        *((uint32_t *)p) = compress_length;
+        p += sizeof(uint32_t);
+        memcpy(p, compress_output, compress_length);
+        p += compress_length;
 
-    compress((char *)(*z16u).data,
-             frame.height * frame.width * sizeof(uint16_t), compress_output,
-             &compress_length);
-    std::cout << "z: original size = "
-              << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((float *)p) = (float)((max_z - min_z) / ABS_MAX_16SU);
-    p += sizeof(float);
-    *((float *)p) = (float)min_z;
-    p += sizeof(float);
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        compress((char *)(*z16u).data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+        std::cout << "z: original size = "
+                  << frame.height * frame.width * sizeof(uint16_t)
+                  << ", compressed size = " << compress_length << std::endl;
+        *((float *)p) = (float)((max_z - min_z) / ABS_MAX_16SU);
+        p += sizeof(float);
+        *((float *)p) = (float)min_z;
+        p += sizeof(float);
+        *((uint32_t *)p) = compress_length;
+        p += sizeof(uint32_t);
+        memcpy(p, compress_output, compress_length);
+        p += compress_length;
+    }
 
     // UV
-    cv::Mat uv_image(frame.height, frame.width, CV_32FC2,
-                     frame.texture_coordinates.get());
-    cv::Mat u32f(rgb_image.rows, rgb_image.cols, CV_32FC1);
-    cv::Mat v32f(rgb_image.rows, rgb_image.cols, CV_32FC1);
+    {
+        cv::Mat uv_image(frame.height, frame.width, CV_32FC2,
+                         frame.texture_coordinates.get());
+        cv::Mat u32f(frame.height, frame.width, CV_32FC1);
+        cv::Mat v32f(frame.height, frame.width, CV_32FC1);
 
-    cv::Mat out_uv[] = {u32f, v32f};
-    int from_to_uv[] = {0, 0, 1, 1};
-    mixChannels(&uv_image, 1, out_uv, 2, from_to_uv, 2);
+        cv::Mat out_uv[] = {u32f, v32f};
+        int from_to_uv[] = {0, 0, 1, 1};
+        mixChannels(&uv_image, 1, out_uv, 2, from_to_uv, 2);
 
-    // Normalization
-    double max_u, min_u, max_v, min_v;
-    cv::minMaxLoc(u32f, &min_u, &max_u);
-    cv::minMaxLoc(v32f, &min_v, &max_v);
+        // Normalization
+        double max_u, min_u, max_v, min_v;
+        cv::minMaxLoc(u32f, &min_u, &max_u);
+        cv::minMaxLoc(v32f, &min_v, &max_v);
 
-    u32f = u32f - min_u;
-    v32f = v32f - min_v;
+        u32f = u32f - min_u;
+        v32f = v32f - min_v;
 
-    std::shared_ptr<cv::Mat> u16u =
-        std::make_shared<cv::Mat>(cv::Mat(u32f.rows, u32f.cols, CV_16SC1));
-    std::shared_ptr<cv::Mat> v16u =
-        std::make_shared<cv::Mat>(cv::Mat(v32f.rows, v32f.cols, CV_16SC1));
-    u32f.convertTo(*u16u, CV_16SC1, frame.width / (max_u - min_u));
-    v32f.convertTo(*v16u, CV_16SC1, frame.height / (max_v - min_v));
+        std::shared_ptr<cv::Mat> u16u =
+            std::make_shared<cv::Mat>(cv::Mat(u32f.rows, u32f.cols, CV_16SC1));
+        std::shared_ptr<cv::Mat> v16u =
+            std::make_shared<cv::Mat>(cv::Mat(v32f.rows, v32f.cols, CV_16SC1));
+        u32f.convertTo(*u16u, CV_16SC1, frame.width / (max_u - min_u));
+        v32f.convertTo(*v16u, CV_16SC1, frame.height / (max_v - min_v));
 
-    compress((char *)(*u16u).data,
-             frame.height * frame.width * sizeof(uint16_t), compress_output,
-             &compress_length);
-    std::cout << "u: original size = "
-              << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((float *)p) = (float)((max_u - min_u) / frame.width);
-    p += sizeof(float);
-    *((float *)p) = (float)min_u;
-    p += sizeof(float);
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        compress((char *)(*u16u).data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+        std::cout << "u: original size = "
+                  << frame.height * frame.width * sizeof(uint16_t)
+                  << ", compressed size = " << compress_length << std::endl;
+        *((float *)p) = (float)((max_u - min_u) / frame.width);
+        p += sizeof(float);
+        *((float *)p) = (float)min_u;
+        p += sizeof(float);
+        *((uint32_t *)p) = compress_length;
+        p += sizeof(uint32_t);
+        memcpy(p, compress_output, compress_length);
+        p += compress_length;
 
-    compress((char *)(*v16u).data,
-             frame.height * frame.width * sizeof(uint16_t), compress_output,
-             &compress_length);
-    std::cout << "v: original size = "
-              << frame.height * frame.width * sizeof(uint16_t)
-              << ", compressed size = " << compress_length << std::endl;
-    *((float *)p) = (float)((max_v - min_v) / frame.height);
-    p += sizeof(float);
-    *((float *)p) = (float)min_v;
-    p += sizeof(float);
-    *((uint32_t *)p) = compress_length;
-    p += sizeof(uint32_t);
-    memcpy(p, compress_output, compress_length);
-    p += compress_length;
+        compress((char *)(*v16u).data,
+                 frame.height * frame.width * sizeof(uint16_t), compress_output,
+                 &compress_length);
+        std::cout << "v: original size = "
+                  << frame.height * frame.width * sizeof(uint16_t)
+                  << ", compressed size = " << compress_length << std::endl;
+        *((float *)p) = (float)((max_v - min_v) / frame.height);
+        p += sizeof(float);
+        *((float *)p) = (float)min_v;
+        p += sizeof(float);
+        *((uint32_t *)p) = compress_length;
+        p += sizeof(uint32_t);
+        memcpy(p, compress_output, compress_length);
+        p += compress_length;
+    }
 
     // Write the size of compressed frame to the head.
     *((uint32_t *)buf) = p - buf;
