@@ -5,3 +5,5 @@ src/render2
 src/3d_telecom
 src/video_capture_speed
 src/eyeLike
+src/point-cloud-compress
+src/rgbd-to-3d
