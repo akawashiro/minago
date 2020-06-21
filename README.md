@@ -1,11 +1,11 @@
 # How to run
 ```bash
-% git clone https://github.com/akawashiro/3d-telecom.git  
+% git clone https://github.com/akawashiro/minago.git  
 % mkdir build  
 % cd build  
 % cmake ..  
 % make  
-% ./launch-3d_telecom.sh  
+% ./launch-minago.sh  
 ```
 
 # TODO
@@ -22,3 +22,6 @@
 - ESCで終了するようにしとくか
     - Qで終了
 - カクつくのは積分制御でも入れるか?  
+
+# MEMO
+- Use TurboPFor-Integer-Compression in compression
