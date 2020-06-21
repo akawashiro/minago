@@ -396,6 +396,8 @@ int connector_main_loop(
     int n_accumlated_read = 0;
     int send_frame_count = 0;
 
+    std::chrono::system_clock::time_point start, end;
+
     while (1) {
         poll(&fd, 1, 1);
         if (fd.revents & POLLIN) {
@@ -411,11 +413,22 @@ int connector_main_loop(
                           << ", n_accumlated_read = " << n_accumlated_read
                           << std::endl;
                 if (n_accumlated_read >= frame_length) {
+                    start = std::chrono::system_clock::now();
+
                     auto f = deserialize_frame_data(rec_buf);
                     frame_push.push(f);
                     n_accumlated_read -= frame_length;
                     memcpy(rec_buf2, rec_buf + frame_length, n_accumlated_read);
                     std::swap(rec_buf, rec_buf2);
+
+                    end = std::chrono::system_clock::now();
+                    double time = static_cast<double>(
+                        std::chrono::duration_cast<std::chrono::microseconds>(
+                            end - start)
+                            .count() /
+                        1000.0);
+                    std::cout << "Frame decompression time = " << time << "[ms]"
+                              << std::endl;
                 }
             }
         }
