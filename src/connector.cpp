@@ -422,7 +422,7 @@ int connector_main_loop(
         if (!frame_pop.empty()) {
             auto f = frame_pop.pop();
 
-            if (send_frame_count % 10 == 0) {
+            if (send_frame_count % 5 == 0) {
                 size_t frame_data_length = serialize_frame_data(*f, snd_buf);
                 std::cout << "predicted bps = "
                           << frame_data_length * camera::FPS * 8 / 1024.0 /
