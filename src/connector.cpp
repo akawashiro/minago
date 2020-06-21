@@ -450,12 +450,14 @@ int connector_main_loop(
     int socket) {
 
     const int BUF_LEN = 50000000;
-    char *buf = (char *)malloc(BUF_LEN);
-    char *buf2 = (char *)malloc(BUF_LEN);
+    char *rec_buf = (char *)malloc(BUF_LEN);
+    char *rec_buf2 = (char *)malloc(BUF_LEN);
+    char *snd_buf = (char *)malloc(BUF_LEN);
     struct pollfd fd;
     fd.fd = socket;
     fd.events = POLLIN | POLLERR;
     int n_accumlated_read = 0;
+    int send_frame_count = 0;
 
     while (1) {
         poll(&fd, 1, 1);
@@ -463,43 +465,44 @@ int connector_main_loop(
             int len_read = 0;
             // If socket == -1 then debug mode.
             if (socket != -1)
-            len_read = read(socket, buf + n_accumlated_read, BUF_LEN);
+                len_read = read(socket, rec_buf + n_accumlated_read, BUF_LEN);
             std::cout << "len_read = " << len_read << std::endl;
             n_accumlated_read += len_read;
             if (n_accumlated_read > 4) {
-                int frame_length = *((uint32_t *)buf);
+                int frame_length = *((uint32_t *)rec_buf);
                 std::cout << "frame_length = " << frame_length
                           << ", n_accumlated_read = " << n_accumlated_read
                           << std::endl;
                 if (n_accumlated_read >= frame_length) {
-                    auto f = deserialize_frame_data(buf);
+                    auto f = deserialize_frame_data(rec_buf);
                     frame_push.push(f);
                     n_accumlated_read -= frame_length;
-                    memcpy(buf2, buf + frame_length, n_accumlated_read);
-                    std::swap(buf, buf2);
+                    memcpy(rec_buf2, rec_buf + frame_length, n_accumlated_read);
+                    std::swap(rec_buf, rec_buf2);
                 }
             }
         }
         if (!frame_pop.empty()) {
             auto f = frame_pop.pop();
 
-            size_t len =
-                (*f).n_points * (sizeof(uint8_t) * 3 + sizeof(rs2::vertex) +
-                                 sizeof(rs2::texture_coordinate));
-            char *compress_frame = (char *)malloc(len);
-            size_t len2 = serialize_frame_data(*f, compress_frame);
-            free(compress_frame);
-
-            std::cout << "length_of_serialize_data(*f) = " << len << std::endl;
-            std::cout << "length of compressed frame = " << len2 << std::endl;
-            std::cout << "predicted bps = " << len2 * 25 * 8 / 1024.0 / 1024.0
+            if (send_frame_count % 10 == 0) {
+                size_t frame_data_length = serialize_frame_data(*f, snd_buf);
+                std::cout << "predicted bps = "
+                          << frame_data_length * camera::FPS * 8 / 1024.0 /
+                                 1024.0
                       << std::endl;
 
-            serialize_frame_data(*f, buf);
             if (socket != -1) {
-            int len_send = send(socket, buf, len, 0);
-            std::cout << "len_send = " << len_send << std::endl;
+                    int len_send = send(socket, snd_buf, frame_data_length, 0);
+                    std::cout << "len_send = " << frame_data_length
+                              << std::endl;
+                }
+            }
+            send_frame_count++;
         }
     }
+    free(rec_buf);
+    free(rec_buf2);
+    free(snd_buf);
 }
 } // namespace connector
