@@ -20,6 +20,15 @@ namespace connector {
 
 const double ABS_MAX_16SU = (1 << 12) - 1;
 
+void print_mat_u8(const cv::Mat &mat) {
+    for (int i = 0; i < mat.rows; i++) {
+        for (int j = 0; j < mat.cols; j++) {
+            std::cout << (int)(((uint8_t *)mat.data)[i * mat.cols + j]) << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 void print_mat_u16(const cv::Mat &mat) {
     for (int i = 0; i < mat.rows; i++) {
         for (int j = 0; j < mat.cols; j++) {
