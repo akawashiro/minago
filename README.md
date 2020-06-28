@@ -32,3 +32,5 @@ sudo docker build -t minago .
 
 # MEMO
 - Use TurboPFor-Integer-Compression in compression
+- When you update librealsense, do not forget changing flags in `CMake/lrs_options.cmake`.  
+  Now, I changed `BUILD_GRAPHICAL_EXAMPLES` and `BUILD_EXAMPLES`.

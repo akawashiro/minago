@@ -11,6 +11,12 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
+### LIBREALSENSE2 ###
+set(BUILD_EXAMPLES OFF)
+add_subdirectory(
+    librealsense-2.35.2
+    )
+
 ### GLFW ###
 
 add_subdirectory (glfw-3.1.2)
@@ -177,4 +183,5 @@ add_subdirectory( bullet-2.81-rev2613/src/BulletSoftBody )
 add_subdirectory( bullet-2.81-rev2613/src/BulletCollision )
 add_subdirectory( bullet-2.81-rev2613/src/BulletDynamics )
 add_subdirectory( bullet-2.81-rev2613/src/LinearMath )
+
 
