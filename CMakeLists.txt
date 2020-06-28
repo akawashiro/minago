@@ -10,7 +10,6 @@ find_package(ZLIB)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_BINARY_DIR ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -latomic")
 
 #Compile external dependencies
 add_subdirectory(external)
