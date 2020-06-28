@@ -7,3 +7,4 @@ src/video_capture_speed
 src/eyeLike
 src/point-cloud-compress
 src/rgbd-to-3d
+src/camera

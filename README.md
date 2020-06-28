@@ -1,12 +1,25 @@
-# How to run
-You can find more precise description in Dockerfile.
+# How to install
+## For ubuntu 20.04
 ```bash
-% git clone https://github.com/akawashiro/minago.git  
-% mkdir build  
-% cd build  
-% cmake ..  
-% make  
-% ./launch-minago.sh  
+sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev
+git clone https://github.com/akawashiro/minago.git
+mkdir build
+cmake ..
+make
+```
+## For Mac OS X
+```bash
+brew install cmake libusb opencv boost
+git clone https://github.com/akawashiro/minago.git
+mkdir build
+cmake ..
+make
+```
+
+# How to run
+```bash
+cd minago/build
+./launch-minago.sh  
 ```
 
 # For contributors
