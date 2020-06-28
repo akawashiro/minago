@@ -86,7 +86,7 @@ int main() {
             float max_z = -std::numeric_limits<float>::max();
 
             for (int i = 0; i < f.n_points; i++) {
-                rs2::vertex v = f.vertices[i];
+                rs2::vertex v = *(f.vertices.get() + i);
                 min_x = std::min(min_x, v.x);
                 min_y = std::min(min_y, v.y);
                 min_z = std::min(min_z, v.z);
@@ -98,9 +98,12 @@ int main() {
             max_y -= min_y;
             max_z -= min_z;
             for (int i = 0; i < f.n_points; i++) {
-                f.vertices[i].x = (f.vertices[i].x - min_x) / max_x;
-                f.vertices[i].y = (f.vertices[i].y - min_y) / max_y;
-                f.vertices[i].z = (f.vertices[i].z - min_z) / max_z;
+                (f.vertices.get() + i)->x =
+                    ((f.vertices.get() + i)->x - min_x) / max_x;
+                (f.vertices.get() + i)->y =
+                    ((f.vertices.get() + i)->y - min_y) / max_y;
+                (f.vertices.get() + i)->z =
+                    ((f.vertices.get() + i)->z - min_z) / max_z;
             }
 
             float min_u = std::numeric_limits<float>::max();
@@ -109,7 +112,7 @@ int main() {
             float max_v = -std::numeric_limits<float>::max();
 
             for (int i = 0; i < f.n_points; i++) {
-                rs2::texture_coordinate t = f.texture_coordinates[i];
+                rs2::texture_coordinate t = *(f.texture_coordinates.get() + i);
                 min_u = std::min(min_x, t.u);
                 min_v = std::min(min_y, t.v);
                 max_u = std::max(max_x, t.u);
@@ -118,10 +121,10 @@ int main() {
             max_u -= min_u;
             max_v -= min_v;
             for (int i = 0; i < f.n_points; i++) {
-                f.texture_coordinates[i].u =
-                    (f.texture_coordinates[i].u - min_u) / max_u;
-                f.texture_coordinates[i].v =
-                    (f.texture_coordinates[i].v - min_v) / max_v;
+                (f.texture_coordinates.get() + i)->u =
+                    ((f.texture_coordinates.get() + i)->u - min_u) / max_u;
+                (f.texture_coordinates.get() + i)->v =
+                    ((f.texture_coordinates.get() + i)->v - min_v) / max_v;
             }
 
             cv::Mat pc_image(f.height, f.width, CV_32FC3, f.vertices.get());
@@ -209,12 +212,12 @@ int main() {
                     uint16_t *p_16uc3 = (uint16_t *)pc_image_16uc3.data;
                     uint16_t *p_red = (uint16_t *)red.data;
                     uint16_t *p_load = (uint16_t *)load_img.data;
-                    std::cout << "f.vertices[i].x = " << f.vertices[i].x
-                              << ", p_16uc3[i * 3 + 0] = "
-                              << p_16uc3[i * 3 + 0] / 65535.0
-                              << ", p_red[i] = " << p_red[i] / 65535.0
-                              << ", p_load[i] = " << p_load[i] / 65535.0
-                              << std::endl;
+                    std::cout
+                        << "f.vertices[i].x = " << (f.vertices.get() + i)->x
+                        << ", p_16uc3[i * 3 + 0] = "
+                        << p_16uc3[i * 3 + 0] / 65535.0
+                        << ", p_red[i] = " << p_red[i] / 65535.0
+                        << ", p_load[i] = " << p_load[i] / 65535.0 << std::endl;
                 }
             }
         }
