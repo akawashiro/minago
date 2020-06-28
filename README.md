@@ -3,6 +3,7 @@
 ```bash
 sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev
 git clone https://github.com/akawashiro/minago.git
+cd minago
 mkdir build
 cmake ..
 make
@@ -11,6 +12,7 @@ make
 ```bash
 brew install cmake libusb opencv boost
 git clone https://github.com/akawashiro/minago.git
+cd minago
 mkdir build
 cmake ..
 make
