@@ -14,9 +14,9 @@ const int FRAME_HEIGHT = 360;
 
 struct rs2_frame_data {
     uint32_t height, width, n_points;
-    std::shared_ptr<uint8_t[]> rgb;
-    std::shared_ptr<rs2::vertex[]> vertices;
-    std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates;
+    std::shared_ptr<uint8_t> rgb;
+    std::shared_ptr<rs2::vertex> vertices;
+    std::shared_ptr<rs2::texture_coordinate> texture_coordinates;
 };
 
 int camera_main_loop(

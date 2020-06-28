@@ -248,8 +248,9 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
 
         cv::Mat rgb_image = cv::imdecode(jpeg_buf, cv::IMREAD_COLOR);
 
-        std::shared_ptr<uint8_t[]> rgb_tmp(
-            new uint8_t[3 * frame.width * frame.height]);
+        std::shared_ptr<uint8_t> rgb_tmp(
+            new uint8_t[3 * frame.width * frame.height],
+            std::default_delete<uint8_t[]>());
         frame.rgb = rgb_tmp;
         memcpy(frame.rgb.get(), rgb_image.data,
                sizeof(uint8_t) * 3 * frame.width * frame.height);
@@ -317,8 +318,9 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int from_to_xyz[] = {0, 0, 1, 1, 2, 2};
         mixChannels(in_xyz, 3, &xyz_image, 1, from_to_xyz, 3);
 
-        std::shared_ptr<rs2::vertex[]> vertices_tmp(
-            new rs2::vertex[frame.n_points]);
+        std::shared_ptr<rs2::vertex> vertices_tmp(
+            new rs2::vertex[frame.n_points],
+            std::default_delete<rs2::vertex[]>());
         frame.vertices = vertices_tmp;
         memcpy(frame.vertices.get(), xyz_image.data,
                sizeof(rs2::vertex) * frame.n_points);
@@ -369,8 +371,9 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int from_to_uv[] = {0, 0, 1, 1};
         mixChannels(in_uv, 3, &uv_image, 1, from_to_uv, 3);
 
-        std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
-            new rs2::texture_coordinate[frame.n_points]);
+        std::shared_ptr<rs2::texture_coordinate> texture_coordinates_tmp(
+            new rs2::texture_coordinate[frame.n_points],
+            std::default_delete<rs2::texture_coordinate[]>());
         frame.texture_coordinates = texture_coordinates_tmp;
         memcpy(frame.texture_coordinates.get(), uv_image.data,
                sizeof(rs2::texture_coordinate) * frame.n_points);

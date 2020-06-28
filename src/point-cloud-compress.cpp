@@ -53,8 +53,9 @@ int main() {
             camera::rs2_frame_data f;
             f.height = color.get_height();
             f.width = color.get_width();
-            std::shared_ptr<uint8_t[]> rgb_tmp(
-                new uint8_t[3 * f.width * f.height]);
+            std::shared_ptr<uint8_t> rgb_tmp(
+                new uint8_t[3 * f.width * f.height],
+                std::default_delete<uint8_t[]>());
             f.rgb = rgb_tmp;
             memcpy(f.rgb.get(), color.get_data(),
                    sizeof(uint8_t) * 3 * f.width * f.height);
@@ -62,13 +63,15 @@ int main() {
             pc.map_to(color);
             points = pc.calculate(depth);
             f.n_points = points.size();
-            std::shared_ptr<rs2::vertex[]> vertices_tmp(
-                new rs2::vertex[f.n_points]);
+            std::shared_ptr<rs2::vertex> vertices_tmp(
+                new rs2::vertex[f.n_points],
+                std::default_delete<rs2::vertex[]>());
             f.vertices = vertices_tmp;
             memcpy(f.vertices.get(), points.get_vertices(),
                    sizeof(rs2::vertex) * f.n_points);
-            std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates_tmp(
-                new rs2::texture_coordinate[f.n_points]);
+            std::shared_ptr<rs2::texture_coordinate> texture_coordinates_tmp(
+                new rs2::texture_coordinate[f.n_points],
+                std::default_delete<rs2::texture_coordinate[]>());
             f.texture_coordinates = texture_coordinates_tmp;
             memcpy(f.texture_coordinates.get(),
                    points.get_texture_coordinates(),

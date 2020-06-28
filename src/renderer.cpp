@@ -150,8 +150,8 @@ int renderer_main_loop(
     GLuint gl_texture_id = 0;
 
     int n_points;
-    std::shared_ptr<rs2::vertex[]> vertices;
-    std::shared_ptr<rs2::texture_coordinate[]> texture_coordinates;
+    std::shared_ptr<rs2::vertex> vertices;
+    std::shared_ptr<rs2::texture_coordinate> texture_coordinates;
 
     while (app) { // Application still alive?
         start = std::chrono::system_clock::now();
