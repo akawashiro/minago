@@ -5,6 +5,7 @@ sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libb
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
+cd build
 cmake ..
 make
 ```
@@ -14,6 +15,7 @@ brew install cmake libusb opencv boost
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
+cd build
 cmake ..
 make
 ```
