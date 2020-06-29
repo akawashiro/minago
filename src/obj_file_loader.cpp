@@ -444,7 +444,7 @@ int run_main(std::string objfile_path, const double *const left_eye_center_x,
         const double scale_y = scale_x / 9 * 16;
         eyex *= scale_x;
         eyey *= scale_y;
-        std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
+        // std::cout << "eyex = " << eyex << ", eyey = " << eyey << std::endl;
         x_lpf.put(eyex);
         y_lpf.put(eyey);
 
