@@ -81,235 +81,253 @@ class LowPassFilter {
     double k = 0.1;
 };
 
-// 画像を読み込む
-GLuint createTexture(std::string path) {
-    // テクスチャを１つ生成
-    GLuint id;
-    glGenTextures(1, &id);
-
-    // テクスチャを拘束
-    // NOTICE 以下テクスチャに対する命令は拘束したテクスチャに対して実行される
-    glBindTexture(GL_TEXTURE_2D, id);
-
+class ObjLoader {
+  public:
     // 画像を読み込む
-    int width;
-    int height;
-    int comp;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height, &comp, 0);
+    GLuint createTexture(std::string path) {
+        // テクスチャを１つ生成
+        GLuint id;
+        glGenTextures(1, &id);
 
-    // アルファの有無でデータ形式が異なる
-    GLint type = (comp == 3) ? GL_RGB : GL_RGBA;
+        // テクスチャを拘束
+        // NOTICE
+        // 以下テクスチャに対する命令は拘束したテクスチャに対して実行される
+        glBindTexture(GL_TEXTURE_2D, id);
 
-    // 画像データをOpenGLへ転送
-    glTexImage2D(GL_TEXTURE_2D, 0, type, width, height, 0, type,
-                 GL_UNSIGNED_BYTE, data);
-    stbi_image_free(data);
+        // 画像を読み込む
+        int width;
+        int height;
+        int comp;
+        unsigned char *data = stbi_load((parent_directory + path).c_str(),
+                                        &width, &height, &comp, 0);
 
-    // 表示用の細々とした設定
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        // アルファの有無でデータ形式が異なる
+        GLint type = (comp == 3) ? GL_RGB : GL_RGBA;
 
-    return id;
-}
+        // 画像データをOpenGLへ転送
+        glTexImage2D(GL_TEXTURE_2D, 0, type, width, height, 0, type,
+                     GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
 
-// マテリアルを読み込む
-std::map<std::string, Material> loadMaterial(const std::string &path) {
-    std::map<std::string, Material> material;
+        // 表示用の細々とした設定
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    std::ifstream stream(path);
-    // ファイルを開けなければ、空の情報を返す
-    if (!stream)
+        return id;
+    }
+
+    // マテリアルを読み込む
+    std::map<std::string, Material> loadMaterial(const std::string &path) {
+        std::map<std::string, Material> material;
+
+        std::ifstream stream(parent_directory + path);
+        // ファイルを開けなければ、空の情報を返す
+        if (!stream)
+            return material;
+
+        std::string cur_name;
+
+        while (!stream.eof()) {
+            std::string s;
+            std::getline(stream, s);
+
+            std::stringstream ss(s);
+            std::string key;
+            ss >> key;
+            if (key == "newmtl") {
+                ss >> cur_name;
+            } else if (key == "Ns") {
+                // スペキュラ指数
+                ss >> material[cur_name].shininess;
+            } else if (key == "Tr") {
+                // 透過
+            } else if (key == "Kd") {
+                // 拡散光
+                ss >> material[cur_name].diffuse[0] >>
+                    material[cur_name].diffuse[1] >>
+                    material[cur_name].diffuse[2];
+            } else if (key == "Ks") {
+                // スペキュラ
+                ss >> material[cur_name].specular[0] >>
+                    material[cur_name].specular[1] >>
+                    material[cur_name].specular[2];
+            } else if (key == "Ka") {
+                // 環境光
+                ss >> material[cur_name].ambient[0] >>
+                    material[cur_name].ambient[1] >>
+                    material[cur_name].ambient[2];
+            } else if (key == "map_Kd") {
+                // テクスチャ
+                std::string tex_path;
+                ss >> tex_path;
+
+                // FIXME
+                // 複数のマテリアルで同じテクスチャを参照している場合の最適化が必要
+                material[cur_name].texture_id = createTexture(tex_path);
+            }
+        }
+
         return material;
-
-    std::string cur_name;
-
-    while (!stream.eof()) {
-        std::string s;
-        std::getline(stream, s);
-
-        std::stringstream ss(s);
-        std::string key;
-        ss >> key;
-        if (key == "newmtl") {
-            ss >> cur_name;
-        } else if (key == "Ns") {
-            // スペキュラ指数
-            ss >> material[cur_name].shininess;
-        } else if (key == "Tr") {
-            // 透過
-        } else if (key == "Kd") {
-            // 拡散光
-            ss >> material[cur_name].diffuse[0] >>
-                material[cur_name].diffuse[1] >> material[cur_name].diffuse[2];
-        } else if (key == "Ks") {
-            // スペキュラ
-            ss >> material[cur_name].specular[0] >>
-                material[cur_name].specular[1] >>
-                material[cur_name].specular[2];
-        } else if (key == "Ka") {
-            // 環境光
-            ss >> material[cur_name].ambient[0] >>
-                material[cur_name].ambient[1] >> material[cur_name].ambient[2];
-        } else if (key == "map_Kd") {
-            // テクスチャ
-            std::string tex_path;
-            ss >> tex_path;
-
-            // FIXME
-            // 複数のマテリアルで同じテクスチャを参照している場合の最適化が必要
-            material[cur_name].texture_id = createTexture(tex_path);
-        }
     }
 
-    return material;
-}
-
-// OBJ形式を読み込む
-Obj loadObj(const std::string &path) {
-    std::ifstream stream(path);
-    assert(stream);
-
-    // ファイルから読み取った値を一時的に保持しておく変数
-    std::vector<GLfloat> vtx;
-    std::vector<GLfloat> normal;
-    std::vector<GLfloat> texture;
-    std::map<std::string, std::vector<Face>> face;
-    std::string cur_mat(""); // マテリアル名
-
-    // 変換後の値
-    Obj obj;
-
-    // NOTICE OBJ形式はデータの並びに決まりがないので、
-    //        いったん全ての情報をファイルから読み取る
-    while (!stream.eof()) {
-        std::string s;
-        std::getline(stream, s);
-
-        // TIPS:文字列ストリームを使い
-        //      文字列→数値のプログラム負荷を下げている
-        std::stringstream ss(s);
-
-        std::string key;
-        ss >> key;
-        if (key == "mtllib") {
-            // マテリアル
-            std::string m_path;
-            ss >> m_path;
-            obj.material = loadMaterial(m_path);
-        } else if (key == "usemtl") {
-            // 適用するマテリアルを変更
-            ss >> cur_mat;
-        } else if (key == "v") {
-            // 頂点座標
-            float x, y, z;
-            ss >> x >> y >> z;
-            vtx.push_back(x);
-            vtx.push_back(y);
-            vtx.push_back(z);
-        } else if (key == "vt") {
-            // 頂点テクスチャ座標
-            float u, v;
-            ss >> u >> v;
-            texture.push_back(u);
-            texture.push_back(v);
-        } else if (key == "vn") {
-            // 頂点法線ベクトル
-            float x, y, z;
-            ss >> x >> y >> z;
-            normal.push_back(x);
-            normal.push_back(y);
-            normal.push_back(z);
-        } else if (key == "f") {
-            std::string text;
-            std::vector<std::tuple<int, int, int>> vtns;
-            while (ss >> text) {
-                // TIPS 初期値を-1にしておき、
-                //      「データが存在しない」状況に対応
-                int vi = -1, ti = -1, ni = -1;
-                std::stringstream fs(text);
-                {
-                    std::string v;
-                    std::getline(fs, v, '/');
-                    vi = std::stoi(v) - 1;
-                }
-                {
-                    std::string v;
-                    std::getline(fs, v, '/');
-                    if (!v.empty()) {
-                        ti = std::stoi(v) - 1;
-                    }
-                }
-                {
-                    std::string v;
-                    std::getline(fs, v, '/');
-                    if (!v.empty()) {
-                        ni = std::stoi(v) - 1;
-                    }
-                }
-                vtns.push_back(std::make_tuple(vi, ti, ni));
-            }
-            for (int i = 2; i < vtns.size(); i++) {
-                Face f = {{std::get<0>(vtns[0]), std::get<0>(vtns[i - 1]),
-                           std::get<0>(vtns[i])},
-                          {std::get<1>(vtns[0]), std::get<1>(vtns[i - 1]),
-                           std::get<1>(vtns[i])},
-                          {std::get<2>(vtns[0]), std::get<2>(vtns[i - 1]),
-                           std::get<2>(vtns[i])}};
-                face[cur_mat].push_back(f);
-            }
+    // OBJ形式を読み込む
+    Obj loadObj(const std::string &path) {
+        auto last_slash = path.rfind("/", path.size() - 1);
+        if (last_slash != std::string::npos) {
+            parent_directory = path.substr(0, last_slash + 1);
+        } else {
+            parent_directory = "";
         }
-    }
+        std::cout << parent_directory << std::endl;
 
-    // 読み込んだ面情報から最終的な頂点配列を作成
-    for (const auto &f : face) {
-        Mesh mesh;
-        // マテリアル名
-        mesh.mat_name = f.first;
+        std::ifstream stream(path);
+        assert(stream);
 
-        mesh.has_texture = f.second[0].ti[0] >= 0;
-        mesh.has_normal = f.second[0].ni[0] >= 0;
+        // ファイルから読み取った値を一時的に保持しておく変数
+        std::vector<GLfloat> vtx;
+        std::vector<GLfloat> normal;
+        std::vector<GLfloat> texture;
+        std::map<std::string, std::vector<Face>> face;
+        std::string cur_mat(""); // マテリアル名
 
-        // 頂点情報
-        for (const auto &m : f.second) {
-            for (int i = 0; i < 3; ++i) {
-                {
-                    // 頂点座標
-                    int index = m.vi[i] * 3;
-                    for (int j = 0; j < 3; ++j) {
-                        mesh.vtx.push_back(vtx[index + j]);
+        // 変換後の値
+        Obj obj;
+
+        // NOTICE OBJ形式はデータの並びに決まりがないので、
+        //        いったん全ての情報をファイルから読み取る
+        while (!stream.eof()) {
+            std::string s;
+            std::getline(stream, s);
+
+            // TIPS:文字列ストリームを使い
+            //      文字列→数値のプログラム負荷を下げている
+            std::stringstream ss(s);
+
+            std::string key;
+            ss >> key;
+            if (key == "mtllib") {
+                // マテリアル
+                std::string m_path;
+                ss >> m_path;
+                obj.material = loadMaterial(m_path);
+            } else if (key == "usemtl") {
+                // 適用するマテリアルを変更
+                ss >> cur_mat;
+            } else if (key == "v") {
+                // 頂点座標
+                float x, y, z;
+                ss >> x >> y >> z;
+                vtx.push_back(x);
+                vtx.push_back(y);
+                vtx.push_back(z);
+            } else if (key == "vt") {
+                // 頂点テクスチャ座標
+                float u, v;
+                ss >> u >> v;
+                texture.push_back(u);
+                texture.push_back(v);
+            } else if (key == "vn") {
+                // 頂点法線ベクトル
+                float x, y, z;
+                ss >> x >> y >> z;
+                normal.push_back(x);
+                normal.push_back(y);
+                normal.push_back(z);
+            } else if (key == "f") {
+                std::string text;
+                std::vector<std::tuple<int, int, int>> vtns;
+                while (ss >> text) {
+                    // TIPS 初期値を-1にしておき、
+                    //      「データが存在しない」状況に対応
+                    int vi = -1, ti = -1, ni = -1;
+                    std::stringstream fs(text);
+                    {
+                        std::string v;
+                        std::getline(fs, v, '/');
+                        vi = std::stoi(v) - 1;
                     }
+                    {
+                        std::string v;
+                        std::getline(fs, v, '/');
+                        if (!v.empty()) {
+                            ti = std::stoi(v) - 1;
+                        }
+                    }
+                    {
+                        std::string v;
+                        std::getline(fs, v, '/');
+                        if (!v.empty()) {
+                            ni = std::stoi(v) - 1;
+                        }
+                    }
+                    vtns.push_back(std::make_tuple(vi, ti, ni));
                 }
-                if (mesh.has_texture) {
-                    // テクスチャ座標
-                    int index = m.ti[i] * 2;
-                    for (int j = 0; j < 2; ++j) {
-                        mesh.texture.push_back(texture[index + j]);
-                    }
-                }
-                if (mesh.has_normal) {
-                    // 法線ベクトル
-                    int index = m.ni[i] * 3;
-                    for (int j = 0; j < 3; ++j) {
-                        mesh.normal.push_back(normal[index + j]);
-                    }
+                for (int i = 2; i < vtns.size(); i++) {
+                    Face f = {{std::get<0>(vtns[0]), std::get<0>(vtns[i - 1]),
+                               std::get<0>(vtns[i])},
+                              {std::get<1>(vtns[0]), std::get<1>(vtns[i - 1]),
+                               std::get<1>(vtns[i])},
+                              {std::get<2>(vtns[0]), std::get<2>(vtns[i - 1]),
+                               std::get<2>(vtns[i])}};
+                    face[cur_mat].push_back(f);
                 }
             }
         }
 
-        obj.mesh.push_back(mesh);
-    }
+        // 読み込んだ面情報から最終的な頂点配列を作成
+        for (const auto &f : face) {
+            Mesh mesh;
+            // マテリアル名
+            mesh.mat_name = f.first;
 
-    // テクスチャ座標のY方向を反転
-    for (auto &mesh : obj.mesh) {
-        for (int i = 1; i < mesh.texture.size(); i += 2) {
-            mesh.texture[i] = -mesh.texture[i];
+            mesh.has_texture = f.second[0].ti[0] >= 0;
+            mesh.has_normal = f.second[0].ni[0] >= 0;
+
+            // 頂点情報
+            for (const auto &m : f.second) {
+                for (int i = 0; i < 3; ++i) {
+                    {
+                        // 頂点座標
+                        int index = m.vi[i] * 3;
+                        for (int j = 0; j < 3; ++j) {
+                            mesh.vtx.push_back(vtx[index + j]);
+                        }
+                    }
+                    if (mesh.has_texture) {
+                        // テクスチャ座標
+                        int index = m.ti[i] * 2;
+                        for (int j = 0; j < 2; ++j) {
+                            mesh.texture.push_back(texture[index + j]);
+                        }
+                    }
+                    if (mesh.has_normal) {
+                        // 法線ベクトル
+                        int index = m.ni[i] * 3;
+                        for (int j = 0; j < 3; ++j) {
+                            mesh.normal.push_back(normal[index + j]);
+                        }
+                    }
+                }
+            }
+
+            obj.mesh.push_back(mesh);
         }
+
+        // テクスチャ座標のY方向を反転
+        for (auto &mesh : obj.mesh) {
+            for (int i = 1; i < mesh.texture.size(); i += 2) {
+                mesh.texture[i] = -mesh.texture[i];
+            }
+        }
+
+        return obj;
     }
 
-    return obj;
-}
+  private:
+    std::string parent_directory;
+};
 
 // マテリアル設定
 void setupMaterial(const Material &material) {
@@ -383,7 +401,8 @@ int run_main(std::string objfile_path, const double *const left_eye_center_x,
 
     // これ以降OpenGLの命令が使える
 
-    Obj obj = loadObj(objfile_path);
+    ObjLoader obj_loader;
+    Obj obj = obj_loader.loadObj(objfile_path);
 
     // 拡散光と鏡面反射を個別に計算する
     // TIPS:これで、テクスチャを張ったポリゴンもキラーン!!ってなる
