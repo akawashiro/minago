@@ -171,13 +171,14 @@ int main() {
 
     std::thread th_camera(camera::camera_main_loop, std::ref(eye_pos_put),
                           std::ref(frame_camera_connector_push), use_realsense);
-    std::thread th_renderer(renderer::renderer_main_loop, std::ref(eye_pos_get),
-                            std::ref(frame_connector_renderer_pop));
     std::thread th_connector(connector::connector_main_loop,
                              std::ref(frame_connector_renderer_push),
                              std::ref(frame_camera_connector_pop), socket);
 
+    // Render on main thread because of Mac OS.
+    renderer::renderer_main_loop(eye_pos_get, frame_camera_connector_pop);
+
     th_camera.join();
-    th_renderer.join();
+    th_connector.join();
     return 0;
 }
