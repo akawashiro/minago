@@ -143,7 +143,7 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
         circle(faceROI, rightRightCorner, 3, 200);
     }
 
-    imshow(face_window_name, faceROI);
+    // imshow(face_window_name, faceROI);
     //  cv::Rect roi( cv::Point( 0, 0 ), faceROI.size());
     //  cv::Mat destinationROI = debugImage( roi );
     //  faceROI.copyTo( destinationROI );
@@ -285,7 +285,7 @@ int run_main(std::pair<int, int> resolution, bool enable_image) {
             }
 
             if (enable_image) {
-                imshow(main_window_name, debugImage);
+                // imshow(main_window_name, debugImage);
 
                 int c = cv::waitKey(10);
                 if ((char)c == 'q') {
