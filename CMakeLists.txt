@@ -44,21 +44,21 @@ add_definitions(
     -D_CRT_SECURE_NO_WARNINGS
 )
 
-add_executable(render2
-	src/render2.cpp
+add_executable(obj_file_loader
+	src/obj_file_loader_main.cpp
     src/obj_file_loader.cpp
 )
 
-target_link_libraries(render2 ${ALL_LIBS})
+target_link_libraries(obj_file_loader ${ALL_LIBS})
 
  create_target_launcher(
-     render2 WORKING_DIRECTORY
+     obj_file_loader WORKING_DIRECTORY
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
  add_custom_command(
-     TARGET render2 POST_BUILD
+     TARGET obj_file_loader POST_BUILD
          COMMAND ${CMAKE_COMMAND} -E copy
-     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/render2${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/obj_file_loader${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
  add_executable(eyeLike

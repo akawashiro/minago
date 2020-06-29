@@ -8,3 +8,4 @@ src/eyeLike
 src/point-cloud-compress
 src/rgbd-to-3d
 src/camera
+src/obj_file_loader
