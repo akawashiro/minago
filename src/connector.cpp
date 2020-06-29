@@ -369,7 +369,7 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
 
         cv::Mat in_uv[] = {u32f, v32f};
         int from_to_uv[] = {0, 0, 1, 1};
-        mixChannels(in_uv, 3, &uv_image, 1, from_to_uv, 3);
+        mixChannels(in_uv, 2, &uv_image, 1, from_to_uv, 2);
 
         std::shared_ptr<rs2::texture_coordinate> texture_coordinates_tmp(
             new rs2::texture_coordinate[frame.n_points],
