@@ -20,7 +20,7 @@ int setup_client() {
     int sock = 0, valread, rc;
     struct in6_addr serv_addr;
     struct addrinfo hints, *res = NULL;
-    char *hello = "Hello from client";
+    char hello[] = "Hello from minago client";
     char buffer[1024] = {0};
 
     memset(&hints, 0x00, sizeof(hints));
@@ -75,7 +75,7 @@ int setup_server() {
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
-    char *hello = "Hello from server";
+    char hello[] = "Hello from minago server";
     struct pollfd fd;
 
     memset(&fd, 0, sizeof(fd));
