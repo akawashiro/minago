@@ -487,6 +487,15 @@ class window {
     window(int width, int height, const char *title)
         : _width(width), _height(height) {
         glfwInit();
+
+#ifdef __APPLE__
+        /* We need to explicitly ask for a 3.2 context on OS X */
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
+
         win = glfwCreateWindow(width, height, title, nullptr, nullptr);
         if (!win)
             throw std::runtime_error(
