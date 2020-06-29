@@ -176,7 +176,7 @@ int main() {
                              std::ref(frame_camera_connector_pop), socket);
 
     // Render on main thread because of Mac OS.
-    renderer::renderer_main_loop(eye_pos_get, frame_camera_connector_pop);
+    renderer::renderer_main_loop(eye_pos_get, frame_connector_renderer_pop);
 
     th_camera.join();
     th_connector.join();
