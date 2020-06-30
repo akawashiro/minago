@@ -189,6 +189,8 @@ int renderer_main_loop(
             upload_texture(f.rgb.get(), width, height, gl_texture_id);
         }
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         if (vertices && texture_coordinates) {
             eye_position = eye_pos_get.get();
             draw_pointcloud_render(window_width, window_height, eye_position,
