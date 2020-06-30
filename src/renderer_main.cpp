@@ -3,7 +3,6 @@
 int main(int argc, char *argv[]) {
     // Initialize Google's logging library.
     google::InitGoogleLogging(argv[0]);
-    google::ParseCommandLineFlags(&argc, &argv, true);
 
     ThreadSafeState<eye_like::EyesPosition> eye_pos;
     auto eye_pos_get = eye_pos.getGetView();
