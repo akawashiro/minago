@@ -128,7 +128,8 @@ int renderer_main_loop(
     ThreadSafeState<eye_like::EyesPosition>::ThreadSafeStateGetViewer
         &eye_pos_get,
     ThreadSafeQueue<camera::rs2_frame_data>::ThreadSafeQueuePopViewer
-        &frame_queue) {
+        &frame_queue,
+    bool debug = false) {
     // Create a simple OpenGL window for rendering:
     window app(1280, 720, "minago - 3d telecommunication software");
     // Construct an object to manage view state
@@ -165,7 +166,18 @@ int renderer_main_loop(
             texture_coordinates = f->texture_coordinates;
 
             upload_texture(f->rgb.get(), width, height, gl_texture_id);
+        } else if (debug) {
+            auto f = camera::read_frame(camera::realsense_frame_dump_file);
+
+            int height = f.height;
+            int width = f.width;
+            n_points = f.n_points;
+            vertices = f.vertices;
+            texture_coordinates = f.texture_coordinates;
+
+            upload_texture(f.rgb.get(), width, height, gl_texture_id);
         }
+
         if (vertices && texture_coordinates) {
             eye_position = eye_pos_get.get();
             draw_pointcloud_render(app.width(), app.height(), app_state,

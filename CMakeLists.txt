@@ -174,6 +174,28 @@ add_custom_command(
      "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/camera${CMAKE_EXECUTABLE_SUFFIX}"
      "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
+# renderer
+add_executable(renderer
+    src/renderer_main.cpp
+    src/renderer.cpp
+    src/camera.cpp
+    src/example.hpp
+    src/eyeLike.cpp 
+    src/findEyeCenter.cpp 
+    src/findEyeCorner.cpp
+    src/helpers.cpp
+    src/thread_safe_queue.cpp
+    src/thread_safe_queue.h)
+    
+target_link_libraries(renderer ${ALL_LIBS})
+create_target_launcher(renderer WORKING_DIRECTORY
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_custom_command(
+     TARGET renderer POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E copy
+     "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/renderer${CMAKE_EXECUTABLE_SUFFIX}"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+
 # point-cloud-compress 
 add_executable(point-cloud-compress
     src/point-cloud-compress.cpp
