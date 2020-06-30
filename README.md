@@ -1,7 +1,7 @@
 # How to install
 ## For ubuntu 20.04
 ```bash
-sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev
+sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev doxygen
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
@@ -11,7 +11,7 @@ make
 ```
 ## For Mac OS X
 ```bash
-brew install cmake libusb opencv boost
+brew install cmake libusb opencv boost doxygen
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
@@ -25,11 +25,12 @@ make
 cd minago/build
 ./launch-minago.sh  
 ```
+If you get any error, please retry with `GLOG_logtostderr=1 ./launch-minago.sh`.
 
 # For contributors
 Please check your patches are built successfully by the following command.
 ```
-sudo docker build -t minago .
+sudo docker build --no-cache -t minago .
 ```
 
 # TODO
