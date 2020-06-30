@@ -1,12 +1,14 @@
 #include "renderer.h"
 
-#include "example.hpp" // Include short list of convenience functions for rendering
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 
-#include <algorithm> // std::min, std::max
+#include <algorithm>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 /* Attempt at supporting openCV version 4.0.1 or higher */
 #if CV_MAJOR_VERSION >= 4
@@ -16,11 +18,11 @@
 #define CV_HAAR_FIND_BIGGEST_OBJECT cv::CASCADE_FIND_BIGGEST_OBJECT
 #endif
 
-// Helper functions
-void register_glfw_callbacks(window &app, glfw_state &app_state);
-
 namespace renderer {
 namespace {
+const int window_width = 1600;
+const int window_height = 1200;
+
 void upload_texture(uint8_t *color_data, int width, int height, GLuint &id) {
     if (!id)
         glGenTextures(1, &id);
@@ -40,7 +42,7 @@ void upload_texture(uint8_t *color_data, int width, int height, GLuint &id) {
 }
 
 // Handles all the OpenGL calls needed to display the point cloud
-void draw_pointcloud_render(float width, float height, glfw_state &app_state,
+void draw_pointcloud_render(float width, float height,
                             eye_like::EyesPosition eye_position, int n_point,
                             const rs2::vertex *vertices,
                             const rs2::texture_coordinate *tex_coords,
@@ -74,10 +76,10 @@ void draw_pointcloud_render(float width, float height, glfw_state &app_state,
     // gluLookAt(0, -0.2, 0, 0, 0, 1, 0, -1, 0);
     gluLookAt(-eyex, -eyey, 0, 0, 0, 1, 0, -1, 0);
 
-    glTranslatef(0, 0, +0.5f + app_state.offset_y * 0.05f);
-    glRotated(app_state.pitch, 1, 0, 0);
-    glRotated(app_state.yaw, 0, 1, 0);
-    glTranslatef(0, 0, -0.5f);
+    // glTranslatef(0, 0, +0.5f + app_state.offset_y * 0.05f);
+    // glRotated(app_state.pitch, 1, 0, 0);
+    // glRotated(app_state.yaw, 0, 1, 0);
+    // glTranslatef(0, 0, -0.5f);
 
     glPointSize(width / 640);
     glEnable(GL_DEPTH_TEST);
@@ -130,18 +132,24 @@ int renderer_main_loop(
     ThreadSafeQueue<camera::rs2_frame_data>::ThreadSafeQueuePopViewer
         &frame_queue,
     bool debug = false) {
-    // Create a simple OpenGL window for rendering:
-    window app(1280, 720, "minago - 3d telecommunication software");
-    // Construct an object to manage view state
-    glfw_state app_state;
-    // register callbacks to allow manipulation of the pointcloud
-    register_glfw_callbacks(app, app_state);
+    if (!glfwInit()) {
+        LOG(FATAL) << "glfwInit failed.";
+        return -1;
+    }
 
-    // Declare pointcloud object, for calculating pointclouds and texture
-    // mappings
+    GLFWwindow *window = glfwCreateWindow(
+        window_width, window_height, "minago - renderer", nullptr, nullptr);
+
+    if (!window) {
+        glfwTerminate();
+        LOG(FATAL) << "glfwCreateWindow failed.";
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+
     rs2::pointcloud pc;
-    // We want the points object to be persistent so we can display the last
-    // cloud when a frame drops
     rs2::points points;
 
     std::chrono::system_clock::time_point start, end;
@@ -154,7 +162,10 @@ int renderer_main_loop(
     std::shared_ptr<rs2::vertex> vertices;
     std::shared_ptr<rs2::texture_coordinate> texture_coordinates;
 
-    while (app) { // Application still alive?
+    LOG(INFO) << "Start the main loop of renderer";
+
+    while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
+           glfwWindowShouldClose(window) == 0) {
         start = std::chrono::system_clock::now();
         if (!frame_queue.empty()) {
             auto f = frame_queue.pop();
@@ -180,19 +191,23 @@ int renderer_main_loop(
 
         if (vertices && texture_coordinates) {
             eye_position = eye_pos_get.get();
-            draw_pointcloud_render(app.width(), app.height(), app_state,
-                                   eye_position, n_points, vertices.get(),
+            draw_pointcloud_render(window_width, window_height, eye_position,
+                                   n_points, vertices.get(),
                                    texture_coordinates.get(), gl_texture_id);
         }
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
 
         end = std::chrono::system_clock::now();
         double time = static_cast<double>(
             std::chrono::duration_cast<std::chrono::microseconds>(end - start)
                 .count() /
             1000.0);
-        // printf("time %lf[ms]\n", time);
+        LOG(INFO) << "render cycle time: " << time << "[ms]";
     }
 
+    glfwTerminate();
     return EXIT_SUCCESS;
 }
 } // namespace renderer
