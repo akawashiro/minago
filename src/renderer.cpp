@@ -163,6 +163,7 @@ int renderer_main_loop(
     std::shared_ptr<rs2::texture_coordinate> texture_coordinates;
 
     LOG(INFO) << "Start the main loop of renderer";
+    int render_count = 0;
 
     while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0) {
@@ -206,7 +207,11 @@ int renderer_main_loop(
             std::chrono::duration_cast<std::chrono::microseconds>(end - start)
                 .count() /
             1000.0);
-        LOG(INFO) << "render cycle time: " << time << "[ms]";
+        if (render_count % 100 == 0) {
+            render_count = 0;
+            LOG(INFO) << "render cycle time: " << time << "[ms]";
+        }
+        render_count++;
     }
 
     glfwTerminate();
