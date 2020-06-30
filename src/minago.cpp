@@ -10,6 +10,8 @@
 #include <iostream>
 #include <thread>
 
+#include <glog/logging.h>
+
 #include "camera.h"
 #include "connector.h"
 #include "renderer.h"
@@ -127,7 +129,10 @@ int setup_server() {
     return new_socket;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    // Initialize Google's logging library.
+    google::InitGoogleLogging(argv[0]);
+
     int socket = -1;
     int use_realsense;
     int connection_type;
@@ -170,7 +175,8 @@ int main() {
     auto frame_connector_renderer_pop = frame_connector_renderer.getPopView();
 
     std::thread th_camera(camera::camera_main_loop, std::ref(eye_pos_put),
-                          std::ref(frame_camera_connector_push), use_realsense);
+                          std::ref(frame_camera_connector_push), use_realsense,
+                          false);
     std::thread th_connector(connector::connector_main_loop,
                              std::ref(frame_connector_renderer_push),
                              std::ref(frame_camera_connector_pop), socket);
