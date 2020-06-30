@@ -9,3 +9,5 @@ src/point-cloud-compress
 src/rgbd-to-3d
 src/camera
 src/obj_file_loader
+src/pc_image_*
+src/tx_image_*
