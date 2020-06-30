@@ -36,7 +36,7 @@ int setup_client() {
 
     // Convert IPv4 and IPv6 addresses from text to binary form
     if (inet_pton(AF_INET6, server_address.c_str(), &serv_addr) <= 0) {
-        printf("\nInvalid address/ Address not supported \n");
+        LOG(FATAL) << "Invalid address/ Address not supported";
         return -1;
     }
     hints.ai_family = AF_INET6;
@@ -153,8 +153,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Connection type (1: server / 2: client / 3: debug) > ";
     std::cin >> connection_type;
     if (connection_type != 1 && connection_type != 2 && connection_type != 3) {
-        std::cout << "Invalid connection type: " << connection_type
-                  << std::endl;
+        LOG(FATAL) << "Invalid connection type: " << connection_type;
         return 0;
     } else if (connection_type == 1) {
         socket = setup_server();

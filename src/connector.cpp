@@ -65,7 +65,7 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
 
         std::vector<uchar> jpeg_buf;
         cv::imencode(".jpg", rgb_image, jpeg_buf);
-        std::cout << "The size of jpeg_buf = " << jpeg_buf.size() << std::endl;
+        LOG(INFO) << "The size of jpeg_buf = " << jpeg_buf.size();
         *((uint32_t *)p) = jpeg_buf.size();
         p += sizeof(uint32_t);
         memcpy(p, jpeg_buf.data(), jpeg_buf.size());
@@ -107,9 +107,9 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
         compress((char *)(*x16u).data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
                  &compress_length);
-        std::cout << "x: original size = "
+        LOG(INFO) << "x: original size = "
                   << frame.height * frame.width * sizeof(uint16_t)
-                  << ", compressed size = " << compress_length << std::endl;
+                  << ", compressed size = " << compress_length;
 
         *((float *)p) = (float)((max_x - min_x) / ABS_MAX_16SU);
         p += sizeof(float);
@@ -123,9 +123,9 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
         compress((char *)(*y16u).data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
                  &compress_length);
-        std::cout << "y: original size = "
+        LOG(INFO) << "y: original size = "
                   << frame.height * frame.width * sizeof(uint16_t)
-                  << ", compressed size = " << compress_length << std::endl;
+                  << ", compressed size = " << compress_length;
 
         *((float *)p) = (float)((max_y - min_y) / ABS_MAX_16SU);
         p += sizeof(float);
@@ -139,9 +139,9 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
         compress((char *)(*z16u).data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
                  &compress_length);
-        std::cout << "z: original size = "
+        LOG(INFO) << "z: original size = "
                   << frame.height * frame.width * sizeof(uint16_t)
-                  << ", compressed size = " << compress_length << std::endl;
+                  << ", compressed size = " << compress_length;
         *((float *)p) = (float)((max_z - min_z) / ABS_MAX_16SU);
         p += sizeof(float);
         *((float *)p) = (float)min_z;
@@ -181,9 +181,9 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
         compress((char *)(*u16u).data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
                  &compress_length);
-        std::cout << "u: original size = "
+        LOG(INFO) << "u: original size = "
                   << frame.height * frame.width * sizeof(uint16_t)
-                  << ", compressed size = " << compress_length << std::endl;
+                  << ", compressed size = " << compress_length;
         *((float *)p) = (float)((max_u - min_u) / frame.width);
         p += sizeof(float);
         *((float *)p) = (float)min_u;
@@ -196,9 +196,9 @@ uint32_t serialize_frame_data(camera::rs2_frame_data frame, char *buf) {
         compress((char *)(*v16u).data,
                  frame.height * frame.width * sizeof(uint16_t), compress_output,
                  &compress_length);
-        std::cout << "v: original size = "
+        LOG(INFO) << "v: original size = "
                   << frame.height * frame.width * sizeof(uint16_t)
-                  << ", compressed size = " << compress_length << std::endl;
+                  << ", compressed size = " << compress_length;
         *((float *)p) = (float)((max_v - min_v) / frame.height);
         p += sizeof(float);
         *((float *)p) = (float)min_v;
@@ -274,8 +274,8 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int x_decomp_length = frame.width * frame.height * sizeof(uint16_t);
         decompress(p, x_comp_length, x16u_buf, &x_decomp_length);
         p += x_comp_length;
-        std::cout << "x_comp_length = " << x_comp_length
-                  << ", x_decomp_length = " << x_decomp_length << std::endl;
+        LOG(INFO) << "x_comp_length = " << x_comp_length
+                  << ", x_decomp_length = " << x_decomp_length;
 
         float y_magnification = *((float *)p);
         p += sizeof(float);
@@ -286,8 +286,8 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int y_decomp_length = frame.width * frame.height * sizeof(uint16_t);
         decompress(p, y_comp_length, y16u_buf, &y_decomp_length);
         p += y_comp_length;
-        std::cout << "y_comp_length = " << y_comp_length
-                  << ", y_decomp_length = " << y_decomp_length << std::endl;
+        LOG(INFO) << "y_comp_length = " << y_comp_length
+                  << ", y_decomp_length = " << y_decomp_length;
 
         float z_magnification = *((float *)p);
         p += sizeof(float);
@@ -298,8 +298,8 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int z_decomp_length = frame.width * frame.height * sizeof(uint16_t);
         decompress(p, z_comp_length, z16u_buf, &z_decomp_length);
         p += z_comp_length;
-        std::cout << "z_comp_length = " << z_comp_length
-                  << ", z_decomp_length = " << z_decomp_length << std::endl;
+        LOG(INFO) << "z_comp_length = " << z_comp_length
+                  << ", z_decomp_length = " << z_decomp_length;
 
         cv::Mat x16u(frame.height, frame.width, CV_16SC1, x16u_buf);
         cv::Mat y16u(frame.height, frame.width, CV_16SC1, y16u_buf);
@@ -342,8 +342,8 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int u_decomp_length = frame.width * frame.height * sizeof(uint16_t);
         decompress(p, u_comp_length, u16u_buf, &u_decomp_length);
         p += u_comp_length;
-        std::cout << "u_comp_length = " << u_comp_length
-                  << ", u_decomp_length = " << u_decomp_length << std::endl;
+        LOG(INFO) << "u_comp_length = " << u_comp_length
+                  << ", u_decomp_length = " << u_decomp_length;
 
         float v_magnification = *((float *)p);
         p += sizeof(float);
@@ -354,8 +354,8 @@ camera::rs2_frame_data deserialize_frame_data(char *buf) {
         int v_decomp_length = frame.width * frame.height * sizeof(uint16_t);
         decompress(p, v_comp_length, v16u_buf, &v_decomp_length);
         p += v_comp_length;
-        std::cout << "v_comp_length = " << v_comp_length
-                  << ", v_decomp_length = " << v_decomp_length << std::endl;
+        LOG(INFO) << "v_comp_length = " << v_comp_length
+                  << ", v_decomp_length = " << v_decomp_length;
 
         cv::Mat u16u(frame.height, frame.width, CV_16SC1, u16u_buf);
         cv::Mat v16u(frame.height, frame.width, CV_16SC1, v16u_buf);
@@ -408,13 +408,12 @@ int connector_main_loop(
             // If socket == -1 then debug mode.
             if (socket != -1)
                 len_read = read(socket, rec_buf + n_accumlated_read, BUF_LEN);
-            std::cout << "len_read = " << len_read << std::endl;
+            LOG(INFO) << "len_read = " << len_read;
             n_accumlated_read += len_read;
             if (n_accumlated_read > 4) {
                 int frame_length = *((uint32_t *)rec_buf);
-                std::cout << "frame_length = " << frame_length
-                          << ", n_accumlated_read = " << n_accumlated_read
-                          << std::endl;
+                LOG(INFO) << "frame_length = " << frame_length
+                          << ", n_accumlated_read = " << n_accumlated_read;
                 if (n_accumlated_read >= frame_length) {
                     start = std::chrono::system_clock::now();
 
@@ -430,8 +429,8 @@ int connector_main_loop(
                             end - start)
                             .count() /
                         1000.0);
-                    std::cout << "Frame decompression time = " << time << "[ms]"
-                              << std::endl;
+                    LOG(INFO)
+                        << "Frame decompression time = " << time << "[ms]";
                 }
             }
         }
@@ -440,15 +439,13 @@ int connector_main_loop(
 
             if (send_frame_count % 5 == 0) {
                 size_t frame_data_length = serialize_frame_data(*f, snd_buf);
-                std::cout << "predicted bps = "
+                LOG(INFO) << "predicted bps = "
                           << frame_data_length * camera::FPS * 8 / 1024.0 /
-                                 1024.0
-                          << std::endl;
+                                 1024.0;
 
                 if (socket != -1) {
                     int len_send = send(socket, snd_buf, frame_data_length, 0);
-                    std::cout << "len_send = " << frame_data_length
-                              << std::endl;
+                    LOG(INFO) << "len_send = " << frame_data_length;
                 }
             }
             send_frame_count++;

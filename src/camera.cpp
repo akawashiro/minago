@@ -214,7 +214,7 @@ int camera_main_loop(
         capture.open(0);
         // check if we succeeded
         if (!capture.isOpened()) {
-            std::cout << "Cannot connect to webcam." << std::endl;
+            LOG(FATAL) << "Cannot connect to webcam.";
             return 0;
         }
         capture.set(cv::CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
