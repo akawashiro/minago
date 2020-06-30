@@ -11,9 +11,15 @@ add_definitions(
 )
 
 ### LIBREALSENSE2 ###
-set(BUILD_EXAMPLES OFF)
+
 add_subdirectory(
     librealsense-2.35.2
+    )
+
+### GLOG ###
+
+add_subdirectory(
+    glog-0.4.0
     )
 
 ### GLFW ###

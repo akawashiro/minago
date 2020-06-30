@@ -24,6 +24,8 @@ include_directories(
     external/glm-0.9.7.1/
     external/glew-1.13.0/include/ 
     external/librealsense-2.35.2/include/
+    external/glog-0.4.0/
+    external/glog-0.4.0/src/
     .
 )
 
@@ -34,6 +36,7 @@ set(ALL_LIBS
 	glfw 
 	GLEW_1130
     realsense2
+    glog
 )
 
 add_definitions(
