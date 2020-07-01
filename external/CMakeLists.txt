@@ -16,12 +16,6 @@ add_subdirectory(
     librealsense-2.35.2
     )
 
-### GLOG ###
-
-add_subdirectory(
-    glog-0.4.0
-    )
-
 ### GLFW ###
 
 add_subdirectory (glfw-3.1.2)

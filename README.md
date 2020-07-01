@@ -11,7 +11,7 @@ make
 ```
 ## For Mac OS X
 ```bash
-brew install cmake libusb opencv boost doxygen
+brew install cmake libusb opencv boost doxygen glog
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
