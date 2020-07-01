@@ -12,3 +12,4 @@ src/obj_file_loader
 src/pc_image_*
 src/tx_image_*
 src/renderer
+src/realsense_frame_dump
