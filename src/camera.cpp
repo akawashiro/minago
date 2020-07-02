@@ -86,9 +86,9 @@ rs2_frame_data read_frame(const std::string &path) {
     frame.n_points = *((uint32_t *)p);
     p += sizeof(uint32_t);
 
-    LOG(INFO) << "frame.height = " << frame.height
-              << ", frame.width = " << frame.width
-              << ", frame.n_points = " << frame.n_points;
+    BOOST_LOG_TRIVIAL(info) << "frame.height = " << frame.height
+                            << ", frame.width = " << frame.width
+                            << ", frame.n_points = " << frame.n_points;
 
     std::shared_ptr<uint8_t> rgb_tmp(
         new uint8_t[3 * frame.width * frame.height],
@@ -120,7 +120,7 @@ int camera_main_loop(
     ThreadSafeQueue<rs2_frame_data>::ThreadSafeQueuePushViewer &frame_queue,
     bool use_realsense, bool debug = false) try {
 
-    LOG(INFO) << "camera_main_loop start";
+    BOOST_LOG_TRIVIAL(info) << "camera_main_loop start";
 
     eye_like::init();
     if (use_realsense) {
@@ -214,8 +214,9 @@ int camera_main_loop(
         capture.open(0);
         // check if we succeeded
         if (!capture.isOpened()) {
-            LOG(FATAL) << "Cannot connect to webcam.";
-            return 0;
+            BOOST_LOG_TRIVIAL(fatal) << "Cannot connect to webcam.\n"
+                                     << boost::stacktrace::stacktrace();
+            std::terminate();
         }
         capture.set(cv::CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
         capture.set(cv::CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);

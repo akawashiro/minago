@@ -3,7 +3,9 @@
 #include <atomic>
 #include <string>
 
-#include <glog/logging.h>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/stacktrace.hpp>
 #include <librealsense2/rs.hpp>
 
 #include "eyeLike.h"

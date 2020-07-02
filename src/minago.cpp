@@ -10,7 +10,9 @@
 #include <iostream>
 #include <thread>
 
-#include <glog/logging.h>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/stacktrace.hpp>
 
 #include "camera.h"
 #include "connector.h"
@@ -36,8 +38,9 @@ int setup_client() {
 
     // Convert IPv4 and IPv6 addresses from text to binary form
     if (inet_pton(AF_INET6, server_address.c_str(), &serv_addr) <= 0) {
-        LOG(FATAL) << "Invalid address/ Address not supported";
-        return -1;
+        BOOST_LOG_TRIVIAL(fatal) << "Invalid address/ Address not supported\n"
+                                 << boost::stacktrace::stacktrace();
+        std::terminate();
     }
     hints.ai_family = AF_INET6;
     hints.ai_flags |= AI_NUMERICHOST;
@@ -130,8 +133,7 @@ int setup_server() {
 }
 
 int main(int argc, char *argv[]) {
-    // Initialize Google's logging library.
-    google::InitGoogleLogging(argv[0]);
+    boost::log::add_console_log(std::cerr);
 
     int socket = -1;
     int use_realsense;
@@ -153,8 +155,10 @@ int main(int argc, char *argv[]) {
     std::cout << "Connection type (1: server / 2: client / 3: debug) > ";
     std::cin >> connection_type;
     if (connection_type != 1 && connection_type != 2 && connection_type != 3) {
-        LOG(FATAL) << "Invalid connection type: " << connection_type;
-        return 0;
+        BOOST_LOG_TRIVIAL(fatal)
+            << "Invalid connection type: " << connection_type << "\n"
+            << boost::stacktrace::stacktrace();
+        std::terminate();
     } else if (connection_type == 1) {
         socket = setup_server();
     } else if (connection_type == 2) {

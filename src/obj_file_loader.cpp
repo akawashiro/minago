@@ -24,7 +24,9 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glog/logging.h>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/stacktrace.hpp>
 
 GLFWwindow *window;
 
@@ -179,7 +181,7 @@ class ObjLoader {
         } else {
             parent_directory = "";
         }
-        LOG(INFO) << "parent_directory = " << parent_directory;
+        BOOST_LOG_TRIVIAL(info) << "parent_directory = " << parent_directory;
 
         std::ifstream stream(path);
         assert(stream);

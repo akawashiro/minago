@@ -133,8 +133,9 @@ int renderer_main_loop(
         &frame_queue,
     bool debug = false) {
     if (!glfwInit()) {
-        LOG(FATAL) << "glfwInit failed.";
-        return -1;
+        BOOST_LOG_TRIVIAL(fatal) << "glfwInit failed.\n"
+                                 << boost::stacktrace::stacktrace();
+        std::terminate();
     }
 
     GLFWwindow *window = glfwCreateWindow(
@@ -142,8 +143,9 @@ int renderer_main_loop(
 
     if (!window) {
         glfwTerminate();
-        LOG(FATAL) << "glfwCreateWindow failed.";
-        return -1;
+        BOOST_LOG_TRIVIAL(fatal) << "glfwCreateWindow failed.\n"
+                                 << boost::stacktrace::stacktrace();
+        std::terminate();
     }
 
     glfwMakeContextCurrent(window);
@@ -162,7 +164,7 @@ int renderer_main_loop(
     std::shared_ptr<rs2::vertex> vertices;
     std::shared_ptr<rs2::texture_coordinate> texture_coordinates;
 
-    LOG(INFO) << "Start the main loop of renderer";
+    BOOST_LOG_TRIVIAL(info) << "Start the main loop of renderer";
     int render_count = 0;
 
     while (glfwGetKey(window, GLFW_KEY_Q) != GLFW_PRESS &&
@@ -209,7 +211,7 @@ int renderer_main_loop(
             1000.0);
         if (render_count % 100 == 0) {
             render_count = 0;
-            LOG(INFO) << "render cycle time: " << time << "[ms]";
+            BOOST_LOG_TRIVIAL(info) << "render cycle time: " << time << "[ms]";
         }
         render_count++;
     }

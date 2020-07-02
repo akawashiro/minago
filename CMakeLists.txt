@@ -4,7 +4,7 @@ project(minago)
 
 find_package(OpenGL REQUIRED) 
 find_package(OpenCV REQUIRED)
-find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS log program_options)
 find_package(ZLIB REQUIRED)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
@@ -24,6 +24,7 @@ include_directories(
     external/glm-0.9.7.1/
     external/glew-1.13.0/include/ 
     external/librealsense-2.35.2/include/
+    ${Boost_INCLUDE_DIRS}
     .
 )
 
@@ -31,10 +32,10 @@ set(ALL_LIBS
 	${OPENGL_LIBRARY}
     ${OpenCV_LIBS}
     ${ZLIB_LIBRARIES}
+    ${Boost_LOG_LIBRARY}
 	glfw 
 	GLEW_1130
     realsense2
-    glog
 )
 
 add_definitions(
@@ -43,6 +44,7 @@ add_definitions(
     -DTW_NO_DIRECT3D
     -DGLEW_STATIC
     -D_CRT_SECURE_NO_WARNINGS
+    -DBOOST_LOG_DYN_LINK
 )
 
 add_executable(obj_file_loader
