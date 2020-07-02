@@ -180,7 +180,7 @@ class ObjLoader {
         } else {
             parent_directory = "";
         }
-        std::cout << parent_directory << std::endl;
+        LOG(INFO) << "parent_directory = " << parent_directory;
 
         std::ifstream stream(path);
         assert(stream);

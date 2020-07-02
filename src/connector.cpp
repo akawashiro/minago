@@ -408,6 +408,10 @@ int connector_main_loop(
             // If socket == -1 then debug mode.
             if (socket != -1)
                 len_read = read(socket, rec_buf + n_accumlated_read, BUF_LEN);
+            if (len_read == 0) {
+                LOG(FATAL) << "Connection down";
+                break;
+            }
             LOG(INFO) << "len_read = " << len_read;
             n_accumlated_read += len_read;
             if (n_accumlated_read > 4) {
