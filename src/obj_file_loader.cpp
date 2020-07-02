@@ -22,11 +22,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-// Include GLEW
 #include <GL/glew.h>
-
-// Include GLFW
 #include <GLFW/glfw3.h>
+#include <glog/logging.h>
+
 GLFWwindow *window;
 
 // 画像を扱う
