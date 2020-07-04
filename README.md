@@ -11,12 +11,12 @@ make
 ```
 ## For Mac OS X
 ```bash
-brew install cmake libusb opencv boost doxygen glog
+brew install cmake libusb opencv boost doxygen glog gflags
 git clone https://github.com/akawashiro/minago.git
 cd minago
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_CXX_FLAGS="-I/usr/local/Cellar/glog/0.4.0/include -I/usr/local/Cellar/gflags/2.2.2/include -L/usr/local/Cellar/glog/0.4.0/lib -L/usr/local/Cellar/gflags/2.2.2/lib" ..
 make
 ```
 
