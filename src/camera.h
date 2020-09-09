@@ -6,7 +6,7 @@
 #include <glog/logging.h>
 #include <librealsense2/rs.hpp>
 
-#include "eyeLike.h"
+#include "eye_like.h"
 #include "thread_safe_queue.h"
 
 namespace camera {

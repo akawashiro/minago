@@ -32,7 +32,7 @@ GLFWwindow *window;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "eyeLike.h"
+#include "eye_like.h"
 
 // マテリアル
 // TIPS メンバ変数にあらかじめ初期値を与えている

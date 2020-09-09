@@ -1,4 +1,4 @@
-#include "eyeLike.h"
+#include "eye_like.h"
 
 #include <chrono>
 #include <iostream>
@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 #include "constants.h"
-#include "findEyeCenter.h"
-#include "findEyeCorner.h"
+#include "find_eye_center.h"
+#include "find_eye_corner.h"
 
 /* Attempt at supporting openCV version 4.0.1 or higher */
 #if CV_MAJOR_VERSION >= 4

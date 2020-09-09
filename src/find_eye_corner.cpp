@@ -1,3 +1,5 @@
+#include "find_eye_corner.h"
+
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/objdetect/objdetect.hpp"
@@ -8,8 +10,6 @@
 
 #include "constants.h"
 #include "helpers.h"
-
-#include "findEyeCorner.h"
 
 cv::Mat *leftCornerKernel;
 cv::Mat *rightCornerKernel;

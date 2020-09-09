@@ -20,7 +20,7 @@
 #include <sstream>
 #include <string>
 
-#include "eyeLike.h"
+#include "eye_like.h"
 
 #ifndef PI
 const double PI = 3.14159265358979323846;

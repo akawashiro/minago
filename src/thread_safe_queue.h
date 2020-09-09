@@ -5,7 +5,7 @@
 #include <queue>
 #include <shared_mutex>
 
-#include "eyeLike.h"
+#include "eye_like.h"
 
 class EmptyQueueException : std::exception {
   public:

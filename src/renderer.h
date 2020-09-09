@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "eyeLike.h"
+#include "eye_like.h"
 #include "thread_safe_queue.h"
 
 namespace renderer {

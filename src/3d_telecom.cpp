@@ -1,4 +1,4 @@
-#include "eyeLike.h"
+#include "eye_like.h"
 #include "obj_file_loader.h"
 
 #include <iostream>

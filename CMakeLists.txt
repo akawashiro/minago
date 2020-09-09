@@ -36,46 +36,50 @@ set(ALL_LIBS
 add_definitions(-DTW_STATIC -DTW_NO_LIB_PRAGMA -DTW_NO_DIRECT3D -DGLEW_STATIC
                 -D_CRT_SECURE_NO_WARNINGS)
 
-add_executable(obj_file_loader src/obj_file_loader_main.cpp
+add_executable(obj-file-loader src/obj_file_loader_main.cpp
                                src/obj_file_loader.cpp)
 
-target_link_libraries(obj_file_loader ${ALL_LIBS})
+target_link_libraries(obj-file-loader ${ALL_LIBS})
 
-create_target_launcher(obj_file_loader WORKING_DIRECTORY
+create_target_launcher(obj-file-loader WORKING_DIRECTORY
                        "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 add_custom_command(
-  TARGET obj_file_loader
+  TARGET obj-file-loader
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E copy
-    "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/obj_file_loader${CMAKE_EXECUTABLE_SUFFIX}"
+    "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/obj-file-loader${CMAKE_EXECUTABLE_SUFFIX}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 add_executable(
-  eyeLike src/eyeLikeMain.cpp src/eyeLike.cpp src/findEyeCenter.cpp
-          src/findEyeCorner.cpp src/helpers.cpp)
+  eye-like
+  src/eye_like_main.cpp
+  src/eye_like.cpp
+  src/find_eye_corner.cpp
+  src/find_eye_center.cpp
+  src/helpers.cpp)
 
-target_link_libraries(eyeLike ${ALL_LIBS})
+target_link_libraries(eye-like ${ALL_LIBS})
 
-create_target_launcher(eyeLike WORKING_DIRECTORY
+create_target_launcher(eye-like WORKING_DIRECTORY
                        "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 add_custom_command(
-  TARGET eyeLike
+  TARGET eye-like
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E copy
-    "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eyeLike${CMAKE_EXECUTABLE_SUFFIX}"
+    "${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eye-like${CMAKE_EXECUTABLE_SUFFIX}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 add_executable(
   3d_telecom
   src/3d_telecom.cpp
   src/obj_file_loader.cpp
-  src/eyeLike.cpp
-  src/findEyeCenter.cpp
-  src/findEyeCorner.cpp
+  src/eye_like.cpp
+  src/find_eye_center.cpp
+  src/find_eye_corner.cpp
   src/helpers.cpp
   src/thread_safe_queue.cpp)
 
@@ -107,8 +111,8 @@ add_custom_command(
 
 # rgbd-to-3d
 add_executable(
-  rgbd-to-3d src/rgbd-to-3d.cpp src/eyeLike.cpp src/findEyeCenter.cpp
-             src/findEyeCorner.cpp src/helpers.cpp)
+  rgbd-to-3d src/rgbd_to_3d.cpp src/eye_like.cpp src/find_eye_center.cpp
+             src/find_eye_corner.cpp src/helpers.cpp)
 
 target_link_libraries(rgbd-to-3d ${ALL_LIBS})
 create_target_launcher(rgbd-to-3d WORKING_DIRECTORY
@@ -126,9 +130,9 @@ add_executable(
   camera
   src/camera_main.cpp
   src/camera.cpp
-  src/eyeLike.cpp
-  src/findEyeCenter.cpp
-  src/findEyeCorner.cpp
+  src/eye_like.cpp
+  src/find_eye_center.cpp
+  src/find_eye_corner.cpp
   src/helpers.cpp
   src/thread_safe_queue.cpp)
 
@@ -149,9 +153,9 @@ add_executable(
   src/renderer_main.cpp
   src/renderer.cpp
   src/camera.cpp
-  src/eyeLike.cpp
-  src/findEyeCenter.cpp
-  src/findEyeCorner.cpp
+  src/eye_like.cpp
+  src/find_eye_center.cpp
+  src/find_eye_corner.cpp
   src/helpers.cpp
   src/thread_safe_queue.cpp)
 
@@ -169,8 +173,8 @@ add_custom_command(
 # point-cloud-compress
 add_executable(
   point-cloud-compress
-  src/point-cloud-compress.cpp src/eyeLike.cpp src/findEyeCenter.cpp
-  src/findEyeCorner.cpp src/helpers.cpp src/thread_safe_queue.cpp)
+  src/point-cloud-compress.cpp src/eye_like.cpp src/find_eye_center.cpp
+  src/find_eye_corner.cpp src/helpers.cpp src/thread_safe_queue.cpp)
 
 target_link_libraries(point-cloud-compress ${ALL_LIBS})
 create_target_launcher(point-cloud-compress WORKING_DIRECTORY
@@ -189,9 +193,9 @@ add_executable(
   src/minago.cpp
   src/camera.cpp
   src/renderer.cpp
-  src/eyeLike.cpp
-  src/findEyeCenter.cpp
-  src/findEyeCorner.cpp
+  src/eye_like.cpp
+  src/find_eye_center.cpp
+  src/find_eye_corner.cpp
   src/connector.cpp
   src/helpers.cpp
   src/compress.cpp
