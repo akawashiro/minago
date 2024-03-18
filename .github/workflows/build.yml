@@ -1,5 +1,7 @@
 name: Build and test
+
 on: [pull_request]
+
 jobs:
   check-ubuntu-Dockerfile:
     runs-on: ubuntu-latest

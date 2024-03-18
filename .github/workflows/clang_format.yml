@@ -1,0 +1,18 @@
+name: clang_format
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Clang format
+      run: sudo apt-get install clang-format-15
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Clang format
+      run: ./scripts/run_clang-format.sh
