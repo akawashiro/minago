@@ -1,7 +1,18 @@
 # How to install
 ## For ubuntu 22.04
 ```bash
-sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev doxygen
+sudo apt-get -y install \
+         cmake \
+         git \
+         build-essential \
+         freeglut3-dev \
+         libopencv-dev \
+         libboost-dev \
+         libboost-program-options-dev \
+         xorg-dev \
+         libglu1-mesa-dev \
+         doxygen \
+         libusb-1.0-0-dev
 git clone https://github.com/akawashiro/minago.git
 cd minago
 cmake -S . -B build
@@ -9,7 +20,7 @@ cmake --build build -- -j
 ```
 ## For Mac OS X
 ```bash
-brew install cmake libusb opencv boost doxygen glog gflags
+brew install cmake libusb opencv boost doxygen
 git clone https://github.com/akawashiro/minago.git
 cd minago
 cmake -S . -B build
@@ -18,16 +29,9 @@ cmake -DCMAKE_CXX_FLAGS="-I/usr/local/Cellar/glog/0.4.0/include \-I/usr/local/Ce
 
 # How to run
 ```bash
-cd minago/build
-./launch-minago.sh  
+./build/launch-minago.sh
 ```
-If you get any error, please retry with `GLOG_logtostderr=1 ./launch-minago.sh`.
-
-# For contributors
-Please check your patches are built successfully by the following command.
-```
-sudo docker build --no-cache -t minago .
-```
+If you get any error, please retry with `GLOG_logtostderr=1 ./build/launch-minago.sh`.
 
 # TODO
 - なんとかしてリアルタイム3Dモデル生成をする
