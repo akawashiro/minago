@@ -143,7 +143,8 @@ int main(int argc, char *argv[]) {
         uint16_t *depth_data = (uint16_t *)depth.get_data();
 
         glPointSize(1.0 / width);
-        glBindTexture(GL_TEXTURE_2D, create_texture(id, color_data, width, height));
+        glBindTexture(GL_TEXTURE_2D,
+                      create_texture(id, color_data, width, height));
         glBegin(GL_POINTS);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
