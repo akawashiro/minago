@@ -1,23 +1,19 @@
 # How to install
-## For ubuntu 20.04
+## For ubuntu 22.04
 ```bash
 sudo apt-get -y install cmake gcc g++ freeglut3 freeglut3-dev libopencv-dev libboost-dev xorg-dev libglu1-mesa-dev software-properties-common libboost-program-options-dev apt-utils libusb-1.0-0-dev doxygen
 git clone https://github.com/akawashiro/minago.git
 cd minago
-mkdir build
-cd build
-cmake ..
-make
+cmake -S . -B build
+cmake --build build -- -j
 ```
 ## For Mac OS X
 ```bash
 brew install cmake libusb opencv boost doxygen glog gflags
 git clone https://github.com/akawashiro/minago.git
 cd minago
-mkdir build
-cd build
-cmake -DCMAKE_CXX_FLAGS="-I/usr/local/Cellar/glog/0.4.0/include -I/usr/local/Cellar/gflags/2.2.2/include -L/usr/local/Cellar/glog/0.4.0/lib -L/usr/local/Cellar/gflags/2.2.2/lib" ..
-make
+cmake -S . -B build
+cmake -DCMAKE_CXX_FLAGS="-I/usr/local/Cellar/glog/0.4.0/include \-I/usr/local/Cellar/gflags/2.2.2/include -L/usr/local/Cellar/glog/0.4.0/lib -L/usr/local/Cellar/gflags/2.2.2/lib" --build build -- -j
 ```
 
 # How to run
